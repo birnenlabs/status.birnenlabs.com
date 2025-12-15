@@ -1,5 +1,5 @@
 {
-  "name": "home.birnenlabs.com",
+  "name": "status.birnenlabs.com",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
@@ -9,11 +9,11 @@
     "update": "npx npm-check-updates"
   },
   "devDependencies": {
-    "typescript": "^5.8.3",
-    "vite": "^7.0.6"
+    "typescript": "^5.9.3",
+    "vite": "^7.3.0"
   },
   "dependencies": {
-    "npm-check-updates": "^18.0.2"
+    "npm-check-updates": "^19.2.0"
   }
 }
 

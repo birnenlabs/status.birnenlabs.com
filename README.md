@@ -3,7 +3,7 @@
 ```shell
 mkdir git
 cd git
-git clone git@github.com:birnenlabs/home.birnenlabs.com
+git clone git@github.com:birnenlabs/status.birnenlabs.com
 ```
 
 ## Testing
