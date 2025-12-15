@@ -1,6 +1,5 @@
-import {checkNonUndefined} from '/jslib/js/preconditions.js';
-import {ModuleInterface, ELLIPSIS} from '../js/modules/interface.js';
-import {loadCss, generateCssName} from '../js/modules/loader.js';
+import {ModuleInterface, RefreshResultItem, ELLIPSIS} from './modules/interface';
+import {loadCss, generateCssName} from './modules/loader';
 
 const BASE_ATT = 'text-base';
 const EXTENSION_ATT = 'text-ext';
@@ -8,18 +7,9 @@ const MODE_ATT = 'extended-mode';
 const SEP_EL = ' • ';
 const SEP = ' ◦ ';
 
-
-/**
- * @typedef {import("../js/modules/interface.js").RefreshResultItem} RefreshResultItem
- *
- */
-
-/**
- * @param {ModuleInterface[]} modules
- */
-export function init(modules) {
+export function init(modules: ModuleInterface[]) {
   console.log('Initialising base DOM structure.');
-  const mainEl = checkNonUndefined(document.getElementById('main-container'));
+  const mainEl = (document.getElementById('main-container') as HTMLDivElement);
 
   for (const module of modules) {
     const el = document.createElement('span');
@@ -34,16 +24,12 @@ export function init(modules) {
   }
 
   // Remove the last separator
-  mainEl.removeChild(/** @type {Node} */(mainEl.lastChild));
+  mainEl.removeChild(mainEl.lastChild as ChildNode);
 
-  checkNonUndefined(document.getElementById('module-style')).innerHTML= loadCss(modules);
+  (document.getElementById('module-style') as HTMLStyleElement).innerHTML= loadCss(modules);
 }
 
-/**
- * @param {string} moduleName
- * @param {RefreshResultItem[]|Error} itemsOrError
- */
-export function render(moduleName, itemsOrError) {
+export function render(moduleName: string, itemsOrError: RefreshResultItem[]|Error) {
   if (itemsOrError instanceof Error) {
     renderError(moduleName, itemsOrError);
   } else {
@@ -51,12 +37,8 @@ export function render(moduleName, itemsOrError) {
   }
 }
 
-/**
- * @param {string} moduleName
- * @param {RefreshResultItem[]} items
- */
-function renderItems(moduleName, items) {
-  const parentEl = checkNonUndefined(document.getElementById(moduleName));
+function renderItems(moduleName: string, items: RefreshResultItem[]) {
+  const parentEl = (document.getElementById(moduleName) as HTMLDivElement);
 
   // Expected elements with the separators between.
   const expectedElementsCount = Math.max(2 * items.length - 1, 0);
@@ -71,16 +53,16 @@ function renderItems(moduleName, items) {
       parentEl.appendChild(childEl);
     }
     while (parentEl.childElementCount > expectedElementsCount) {
-      parentEl.removeChild(/** @type {Node} */(parentEl.lastChild));
+      parentEl.removeChild(parentEl.lastChild as ChildNode);
     }
   }
 
   for (let i = 0; i < items.length; i++) {
     // Getting text element, ignoring separators.
-    const el = /** @type {HTMLElement} */ (parentEl.children[2 * i]);
+    const el = (parentEl.children[2 * i] as HTMLElement);
     const item = items[i];
     if (item.classNames) {
-      el.className = item.classNames.map((className) => generateCssName(moduleName, className)).join(' ');
+      el.className = item.classNames.map((className: string) => generateCssName(moduleName, className)).join(' ');
     } else {
       el.className = '';
     }
@@ -107,12 +89,8 @@ function renderItems(moduleName, items) {
   }
 }
 
-/**
- * @param {string} moduleName
- * @param {Error} error
- */
-function renderError(moduleName, error) {
-  const parentEl = checkNonUndefined(document.getElementById(moduleName));
+function renderError(moduleName: string, error: Error) {
+  const parentEl = (document.getElementById(moduleName) as HTMLElement);
 
   if (!parentEl.hasChildNodes()) {
     parentEl.appendChild(document.createElement('span'));
@@ -123,12 +101,7 @@ function renderError(moduleName, error) {
   setElement(el, error.message, '');
 }
 
-/**
- * @param {Element} el
- * @param {string} text
- * @param {string|string[]|undefined} extension
- */
-function setElement(el, text, extension) {
+function setElement(el: Element, text: string, extension: string|string[]|undefined) {
   el.setAttribute(BASE_ATT, text);
 
   if (extension === '') {
@@ -146,27 +119,19 @@ function setElement(el, text, extension) {
   updateView(el);
 }
 
-/**
- * @param {Element} el
- */
-function updateView(el) {
-  const extendedMode = el.hasAttribute(MODE_ATT);
-
-  if (extendedMode) {
-    let base = checkNonUndefined(el.getAttribute(BASE_ATT));
+function updateView(el: Element) {
+  if (el.hasAttribute(MODE_ATT)) {
+    let base = el.getAttribute(BASE_ATT)!;
     if (base.slice(-1) === ELLIPSIS) {
       base = base.slice(0, -1);
     }
     el.textContent = base + (el.getAttribute(EXTENSION_ATT) || '');
   } else {
-    el.textContent = checkNonUndefined(el.getAttribute(BASE_ATT));
+    el.textContent = el.getAttribute(BASE_ATT);
   }
 }
 
-/**
- * @param {MouseEvent} e
- */
-export function mouseover(e) {
+export function mouseover(e: MouseEvent) {
   const el = e.target;
   if (el instanceof HTMLElement && el.hasAttribute(BASE_ATT)) {
     // el.getBoundingClientRect returns element position in relation to
@@ -180,10 +145,7 @@ export function mouseover(e) {
   }
 }
 
-/**
- * @param {MouseEvent} e
- */
-export function mouseout(e) {
+export function mouseout(e: MouseEvent) {
   const el = e.target;
   if (el instanceof HTMLElement && el.hasAttribute(BASE_ATT)) {
     el.removeAttribute(MODE_ATT);
@@ -191,13 +153,10 @@ export function mouseout(e) {
   }
 }
 
-/**
- * @param {MouseEvent} e
- */
-export function mousemove(e) {
+export function mousemove(e: MouseEvent) {
   const el = e.target;
   if (el instanceof HTMLElement && el.hasAttribute(MODE_ATT)) {
-    const clientX = checkNonUndefined(el.getAttribute(MODE_ATT));
+    const clientX = el.getAttribute(MODE_ATT)!;
     // Call mouse out if the coursor would have left element before expansion.
     if (e.clientX > +clientX) {
       mouseout(e);

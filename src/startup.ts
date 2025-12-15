@@ -1,13 +1,8 @@
-import {loadModules} from '../js/modules/loader.js';
-import {initModuleRenderer} from '../js/modules/renderer.js';
-import {init, render, mousemove, mouseover, mouseout} from './html.js';
-import {checkNonUndefined} from '/jslib/js/preconditions.js';
+import {loadModules} from './modules/loader';
+import {initModuleRenderer} from './modules/renderer';
+import {init, render, mousemove, mouseover, mouseout} from './html';
 
-/**
- * on page load
- * @return {Promise<any>}
- */
-function onPageLoad() {
+function onPageLoad():Promise<any> {
   const consoleLog = 'Modules: init';
   console.time(consoleLog);
   console.group(consoleLog);
@@ -15,7 +10,6 @@ function onPageLoad() {
   const modules = loadModules();
   init(modules);
 
-  /** @type {Promise<any>} */
   let result = Promise.resolve();
   for (const module of modules) {
     result = result.then(() => initModuleRenderer(module, render));
@@ -40,7 +34,7 @@ function calculateVisibleArea() {
                window.innerHeight),
            // Limit max height to 60px
            60);
-  const el = checkNonUndefined(document.getElementById('main-container'));
+  const el = (document.getElementById('main-container') as HTMLDivElement);
 
   // main container will have the same height as visible area
   el.style.height = areaHeight + 'px';
@@ -62,7 +56,7 @@ function calculateVisibleArea() {
  * Init mouse over events
  */
 function setMouseOver() {
-  const el = checkNonUndefined(document.getElementById('main-container'));
+  const el = (document.getElementById('main-container') as HTMLDivElement);
   el.addEventListener('mouseover', mouseover, false);
   el.addEventListener('mouseout', mouseout, false);
   el.addEventListener('mousemove', mousemove, false);
@@ -70,13 +64,13 @@ function setMouseOver() {
 
 /** init settings */
 function initSettingsLink() {
-  const el = checkNonUndefined(document.getElementById('settings-link'));
+  const el = (document.getElementById('settings-link') as HTMLSpanElement);
   el.onclick = () => window.open('https://birnenlabs.com/pwa/status/settings/', 'window', 'toolbar=no,menubar=no,resizable=yes');
 }
 
 /** set blur class */
 function setBlurClass() {
-  const el = checkNonUndefined(document.getElementById('main-container'));
+  const el = (document.getElementById('main-container') as HTMLDivElement);
   if (document.hasFocus()) {
     el.classList.remove('blur');
   } else {
