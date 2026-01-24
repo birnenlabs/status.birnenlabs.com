@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Disallow connections to external services. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://*.firebasedatabase.app; style-src 'self' 'unsafe-inline'; connect-src *; frame-src 'self' https://*.firebasedatabase.app">
+
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/icon-192x192.png">
+    <link rel="stylesheet" href="./settings.css">
+    <title>status - configuration</title>
+    <script type='module' src="/src/settings/startup.ts"></script>
+  </head>
+  <body>
+    <h1>Settings</h1>
+    <section>
+      <h2>Modules</h2>
+
+      <table id="modules-table">
+        <tr>
+          <td><h3>Available modules</h3></td>
+          <td><h3>Enabled modules</h3></td>
+        </tr>
+        <tr>
+          <td><pre id="modules-available"></pre></td>
+          <td>
+            <p>One entry per line, modules will be displayed in the given order</p>
+            <textarea id="modules-enabled"></textarea>
+            <input id="modules-save" type="button" value="Save & Reload Configuration Section"></input>
+          </td>
+        </tr>
+      </table>
+
+      <h2>Configuration</h2>
+      <section id="config-header-section">
+        Loading...
+      </section>
+      <section id="config-section">
+      </section>
+    </section>
+  </body>
+</html>

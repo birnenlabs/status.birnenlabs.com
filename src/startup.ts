@@ -61,7 +61,7 @@ function setMouseOver(): void {
 function initSettingsLink(): void {
   const el = document.getElementById('settings-link');
   if (el instanceof HTMLSpanElement) {
-    el.onclick = () => window.open('https://birnenlabs.com/pwa/status/settings/', 'window', 'toolbar=no,menubar=no,resizable=yes');
+    el.onclick = () => window.open('./settings.html', 'window', 'toolbar=no,menubar=no,resizable=yes');
   }
 }
 

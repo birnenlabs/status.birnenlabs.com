@@ -1,0 +1,135 @@
+body, html {
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #4c4c4c;
+  color: #fff;
+  font-family: Roboto;
+  overflow-y: hidden;
+  user-select: none;
+}
+
+body:has(.urgent) {
+  animation: blinkingUrgent 1s infinite;
+
+  #settings-link {
+    animation: blinkingUrgent-4c4c4c 1s infinite;
+  }
+}
+
+.box-sep {
+  /** Compensate for the padding of .box */
+  margin: 0 -2px;
+  /** The same top and bottom padding so the separator is at the same height as the rest. */
+  padding: 30px 0;
+}
+
+.box {
+  /** Top and bottom padding is hidden anyway outside the height of the main container.
+      Let's max it out to increase clickable area.
+      When changing, set the same padding on box-sep class and adjust its margin.
+  */
+  padding: 30px 2px;
+}
+
+.box:hover {
+  background-color: #fff3;
+}
+
+.error {
+  color: #f64;
+}
+
+.important {
+  background-color: #d44;
+}
+
+.important:hover {
+  /** calculated as #d44 + #fff3 */
+  background-color: #e46969
+}
+
+.urgent {
+  background-color: #d44;
+}
+
+.link {
+  cursor: pointer;
+}
+
+@keyframes blinkingUrgent {
+  0% {
+    background-color: #d44;
+  }
+  60% {
+    background-color: #d44;
+  }
+  61% {
+    background-color: #4c4c4c;
+  }
+  100% {
+    background-color: #4c4c4c;
+  }
+}
+
+/** animation for elements that have set the background to #4c4c4c */
+@keyframes blinkingUrgent-4c4c4c {
+  0% {
+    background-color: transparent;
+  }
+  60% {
+    background-color: transparent;
+  }
+  61% {
+    background-color: #4c4c4c;
+  }
+  100% {
+    background-color: #4c4c4c;
+  }
+}
+
+#main-container {
+  /** overflow-x: hidden for the too long text, overflow-y: hidden for the too big padding that was deliberately set */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /** when in window-controls-overlay mode it will set width properly */
+  width: env(titlebar-area-width, 100%);
+}
+
+/** first box element should be with margin. Using 2nd child as settings is always first */
+#main-container > span:nth-child(2) > .box:first-child {
+  padding-left: 0.5ch;
+}
+
+#settings-link {
+  /** Same color as body, to hide elements below it. */
+  background-color: #4c4c4c;
+  /** Setting color instead of opacity to affect font only (without background) */
+  color: rgba(0, 0, 0, 0.6);
+  /** Filter is applied to everything,including the background, but the background is already gray. */
+  filter: grayscale(1);
+  float: right;
+  font-size: 75%;
+  margin-left: 4px;
+  padding: 1px 2px 0 2px;
+}
+
+#main-container.blur > #settings-link {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+#settings-link:hover {
+  background-color: #fff3;
+  color: rgba(0, 0, 0, 1);
+}
+
+#main-container.blur > #settings-link:hover {
+  color: rgba(0, 0, 0, 0.7);
+}

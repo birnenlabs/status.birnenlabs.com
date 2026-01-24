@@ -1,6 +1,13 @@
 import {defineConfig} from 'vite'
+import { resolve } from 'path';
 
 export default defineConfig({
-  // Project setup configuration goes here.
-  // The default settings are great for getting started.
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        settings: resolve(__dirname, 'settings.html'),
+      },
+    },
+  },
 });
