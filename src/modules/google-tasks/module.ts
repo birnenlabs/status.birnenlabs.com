@@ -27,7 +27,7 @@ export class GoogleTasksModule extends ScheduledModuleInterface {
     this.listIds = [];
   }
 
-  async refresh(forced: boolean): Promise<RefreshResult> {
+  override async refresh(forced: boolean): Promise<RefreshResult> {
     const midnightToday = new Date();
     midnightToday.setHours(0, 0, 0, 0);
 
@@ -63,12 +63,12 @@ export class GoogleTasksModule extends ScheduledModuleInterface {
     };
   }
 
-  getDefaultConfig(): DefaultConfig {
+  override getDefaultConfig(): DefaultConfig {
     return DEFAULT_CONFIG;
   }
 
-  setConfig(config: {[key: string]: string}): void {
-    this.listIds = config.listIds?.split(',').filter((i) => i) ?? [];
+  override setConfig(config: {[key: string]: string}): void {
+    this.listIds = config['listIds']?.split(',').filter((i) => i) ?? [];
     const oAuthOrError = processOAuth(this, config);
     if (oAuthOrError instanceof OAuth) {
       this.connector = new TasksConnector(oAuthOrError);

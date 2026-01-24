@@ -30,6 +30,7 @@ export function combine<P1, P2, P3, P4, R>(
  */
 export function combine(...args: any[]): Promise<any> {
   // The last argument is always the combine function
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   const combineFn = args.pop() as Function;
 
   // The rest of the arguments are the promises

@@ -209,7 +209,7 @@ function createConfigWithHelp(config: Record<string, string>, helpObj: Record<st
 
     if (Object.prototype.hasOwnProperty.call(helpObj, key)) {
       const helpEl = document.createElement('span');
-      helpEl.textContent = helpObj[key];
+      helpEl.textContent = helpObj[key] || null;
       keyEl.appendChild(helpEl);
       keyEl.classList.add('config-preview-key-with-tooltip');
       helpEl.classList.add('config-preview-tooltip');

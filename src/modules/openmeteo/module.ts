@@ -56,7 +56,7 @@ export class OpenMeteoModule extends ScheduledModuleInterface {
    * @param {boolean} forced
    * @return {Promise<RefreshResult>}
    */
-  refresh(forced: boolean): Promise<RefreshResult> {
+  override refresh(forced: boolean): Promise<RefreshResult> {
     if (this.#url) {
       const consoleLog = `OpenMeteoModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`;
       console.time(consoleLog);
@@ -101,19 +101,19 @@ export class OpenMeteoModule extends ScheduledModuleInterface {
     ];
   }
 
-  getDefaultConfig(): DefaultConfig {
+  override getDefaultConfig(): DefaultConfig {
     return CONFIG;
   }
 
-  setConfig(config: Record<string, string>): void {
+  override setConfig(config: Record<string, string>): void {
     this.#url =
       'https://api.open-meteo.com/v1/forecast?' +
-      `latitude=${config.latitude}&` +
-      `longitude=${config.longitude}&` +
+      `latitude=${config['latitude']}&` +
+      `longitude=${config['longitude']}&` +
       'current=temperature_2m,wind_speed_10m,relative_humidity_2m,precipitation&' +
-      `temperature_unit=${config.temperatureUnit}&` +
-      `wind_speed_unit=${config.windSpeedUnit}`;
-    this.#windyUrl = `https://www.windy.com/?rain,${config.latitude},${config.longitude},7,i:temp`;
-    this.css = OpenMeteoModule.#createCss(config.rainColor);
+      `temperature_unit=${config['temperatureUnit']}&` +
+      `wind_speed_unit=${config['windSpeedUnit']}`;
+    this.#windyUrl = `https://www.windy.com/?rain,${config['latitude']},${config['longitude']},7,i:temp`;
+    this.css = OpenMeteoModule.#createCss(config['rainColor'] || '');
   }
 }

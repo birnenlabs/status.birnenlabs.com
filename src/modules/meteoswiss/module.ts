@@ -26,7 +26,7 @@ Use this map to get coordinates for your area: https://tools.retorte.ch/map/. Th
  */
 export class MeteoSwissModule extends ScheduledModuleInterface {
   #meteoSwissLib: MeteoSwissLib | undefined;
-  public css: CustomCss[];
+  public override css: CustomCss[];
 
   /**
    * Constructor
@@ -37,7 +37,7 @@ export class MeteoSwissModule extends ScheduledModuleInterface {
     this.css = css;
   }
 
-  public refresh(forced: boolean): Promise<RefreshResult> {
+  public override refresh(forced: boolean): Promise<RefreshResult> {
     const consoleLog = `MeteoSwissModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`;
     if (this.#meteoSwissLib === undefined) {
       const err = new Error('Config is not set.');
@@ -76,7 +76,7 @@ export class MeteoSwissModule extends ScheduledModuleInterface {
     ];
   }
 
-  public getDefaultConfig(): DefaultConfig {
+  public override getDefaultConfig(): DefaultConfig {
     return {
       version: 0,
       mergeStrategy: 'DEFAULT_WITH_STORED_EXCLUSIVE',
@@ -98,13 +98,13 @@ export class MeteoSwissModule extends ScheduledModuleInterface {
     };
   }
 
-  public setConfig(config: Record<string, string>): void {
+  public override setConfig(config: Record<string, string>): void {
     this.#meteoSwissLib = new MeteoSwissLib(
-      parseInt(config.workY, 10),
-      parseInt(config.workX, 10),
-      parseInt(config.homeY, 10),
-      parseInt(config.homeX, 10),
+      parseInt(config['workY'] || '', 10),
+      parseInt(config['workX'] || '', 10),
+      parseInt(config['homeY'] || '', 10),
+      parseInt(config['homeX'] || '', 10),
     );
-    this.css = MeteoSwissModule.#createCss(config.rainColor);
+    this.css = MeteoSwissModule.#createCss(config['rainColor'] || '');
   }
 }

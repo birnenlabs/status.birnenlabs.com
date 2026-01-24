@@ -18,9 +18,9 @@ import {OpenMeteoModule} from './openmeteo/module.js';
 import {SongModule} from './firebase/song.js';
 
 // Comma is allowed to specify multiple classes.
-const REGEXP_CSS_NAME = /^[a-zA-Z_-][a-zA-Z_,-]+$/;
-const REGEXP_CSS_PROPERTY = /^[a-zA-Z]+$/;
-const REGEXP_CSS_PROPERTY_VALUE = /^#?[\.\(\)a-zA-Z0-9-]+$/;
+const REGEXP_CSS_NAME = /^[a-zA-Z_-][a-zA-Z_,-]+$/u;
+const REGEXP_CSS_PROPERTY = /^[a-zA-Z]+$/u;
+const REGEXP_CSS_PROPERTY_VALUE = /^#?[.()a-zA-Z0-9-]+$/u;
 
 type ModuleConstructor = new () => ModuleInterface;
 
@@ -122,11 +122,11 @@ class ErrorModule extends ScheduledModuleInterface {
     this.#error = error;
   }
 
-  refresh(_: boolean): RefreshResult {
+  override refresh(_: boolean): RefreshResult {
     throw this.#error;
   }
 
-  getDefaultConfig(): DefaultConfig {
+  override getDefaultConfig(): DefaultConfig {
     return {
       version: 0,
       mergeStrategy: 'DEFAULT_WITH_STORED_EXCLUSIVE',
@@ -134,7 +134,7 @@ class ErrorModule extends ScheduledModuleInterface {
     };
   }
 
-  setConfig(_: Record<string, string>): void {
+  override setConfig(_: Record<string, string>): void {
     // empty
   }
 }

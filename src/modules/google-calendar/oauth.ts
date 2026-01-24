@@ -16,10 +16,11 @@ export function processOAuth(module: ModuleInterface, config: Record<string, str
   const settings = syncAndGetOAuthSettings(module, config);
 
   // If oauthStartAuthenticationFlow then start the process.
-  if (config.oauthStartAuthenticationFlow === 'true') {
+  if (config['oauthStartAuthenticationFlow'] === 'true') {
     if (settings.isInitialised()) {
       // Change oauthStartAuthenticationFlow to false before starting redirection.
-      config.oauthStartAuthenticationFlow = 'false';
+      // Change oauthStartAuthenticationFlow to false before starting redirection.
+      config['oauthStartAuthenticationFlow'] = 'false';
       setModuleConfigString(module, objectToString(config));
 
       // Open settingsUrl or reload current page.
@@ -27,13 +28,13 @@ export function processOAuth(module: ModuleInterface, config: Record<string, str
       if (url) {
         window.location.href = url.href;
       } else {
-        config.oauthStartAuthenticationFlow = 'Could not create OAuthUrl';
+        config['oauthStartAuthenticationFlow'] = 'Could not create OAuthUrl';
         setModuleConfigString(module, objectToString(config));
         window.alert('Could not create OAuthUrl, please check all the OAuth related config');
         window.location.reload();
       }
     } else {
-      config.oauthStartAuthenticationFlow = 'missing scope, clientId or clientSecret';
+      config['oauthStartAuthenticationFlow'] = 'missing scope, clientId or clientSecret';
       setModuleConfigString(module, objectToString(config));
       window.alert('OAuth settings are not valid. Scope, clientId or clientSecret is not set.');
       window.location.reload();
@@ -56,13 +57,13 @@ export function processOAuth(module: ModuleInterface, config: Record<string, str
  */
 function syncAndGetOAuthSettings(module: ModuleInterface, config: Record<string, string>): OAuthSettings {
   // Sync OAuth with the module settings
-  const oAuthSettings = new OAuthSettings(module.name + '-oauth-v' + config.oauthSettingsVersion);
+  const oAuthSettings = new OAuthSettings(module.name + '-oauth-v' + config['oauthSettingsVersion']);
   oAuthSettings.setOAuthUrl('https://accounts.google.com/o/oauth2/auth');
   oAuthSettings.setTokenUrl('https://accounts.google.com/o/oauth2/token');
   oAuthSettings.setRedirectUrl('https://birnenlabs.com/oauth/popup.html');
-  oAuthSettings.setScope(config.scope || '');
-  oAuthSettings.setClientId(config.clientId || '');
-  oAuthSettings.setClientSecret(config.clientSecret || '');
+  oAuthSettings.setScope(config['scope'] || '');
+  oAuthSettings.setClientId(config['clientId'] || '');
+  oAuthSettings.setClientSecret(config['clientSecret'] || '');
   oAuthSettings.setReturnUrl(window.location.href);
   oAuthSettings.save();
 

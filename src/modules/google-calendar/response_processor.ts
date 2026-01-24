@@ -64,7 +64,7 @@ export function createRefreshResult(
   let i = 0;
 
   // Scroll i past full day events
-  while (i < calendarEntries.length && calendarEntries[i].fullDayEvent()) {
+  while (i < calendarEntries.length && calendarEntries[i]?.fullDayEvent()) {
     i++;
   }
   // i > 0 means we have some full day events
@@ -75,7 +75,7 @@ export function createRefreshResult(
     for (let j = 0; j < i; j++) {
       const entry = calendarEntries[j];
       console.log(`${entry}`);
-      if (firstAllDayEventIndex == 0 && entry.getCalendarId() === firstSourceCalendar) {
+      if (firstAllDayEventIndex == 0 && entry?.getCalendarId() === firstSourceCalendar) {
         firstAllDayEventIndex = j;
         hasFirstCalendarEvent = true;
       }
@@ -86,7 +86,7 @@ export function createRefreshResult(
 
     const entry = calendarEntries[firstAllDayEventIndex];
     const item: RefreshResultItem = {
-      value: entry.title(),
+      value: entry?.title() || '',
       extendedValue: '',
       classNames: [`calendarItem-firstCalendar-${hasFirstCalendarEvent}`],
     };
@@ -97,7 +97,7 @@ export function createRefreshResult(
       item.extendedValue = [];
       for (let j = 0; j < i; j++) {
         if (j != firstAllDayEventIndex) {
-          (item.extendedValue as string[]).push(calendarEntries[j].title());
+          (item.extendedValue as string[]).push(calendarEntries[j]?.title() || '');
         }
       }
     }
@@ -107,7 +107,7 @@ export function createRefreshResult(
 
   let fullTitleDisplayed = false;
   while (i < calendarEntries.length) {
-    const entry = calendarEntries[i];
+    const entry = calendarEntries[i]!;
     console.group(`${entry}`);
 
     const item: RefreshResultItem = {

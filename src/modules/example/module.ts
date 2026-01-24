@@ -35,7 +35,7 @@ export class ExampleScheduledModule extends ScheduledModuleInterface {
     super(0, CSS);
   }
 
-  refresh(forced: boolean): Promise<RefreshResult> {
+  override refresh(forced: boolean): Promise<RefreshResult> {
     const consoleLog = `ExampleModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`;
     console.time(consoleLog);
     console.groupCollapsed(consoleLog);
@@ -53,11 +53,11 @@ export class ExampleScheduledModule extends ScheduledModuleInterface {
       .finally(() => console.timeEnd(consoleLog));
   }
 
-  getDefaultConfig(): DefaultConfig {
+  override getDefaultConfig(): DefaultConfig {
     return CONFIG;
   }
 
-  setConfig(config: Record<string, string>): void {
+  override setConfig(config: Record<string, string>): void {
     console.log(config);
   }
 }
@@ -87,11 +87,11 @@ export class ExamplePushModule extends PushModuleInterface {
     );
   }
 
-  getDefaultConfig(): DefaultConfig {
+  override getDefaultConfig(): DefaultConfig {
     return CONFIG;
   }
 
-  setConfig(config: Record<string, string>): void {
+  override setConfig(config: Record<string, string>): void {
     console.log(config);
   }
 }

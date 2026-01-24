@@ -67,7 +67,7 @@ class ScheduledEvent extends BaseEvent {
     this.#rescheduleCount = 0;
   }
 
-  toString(): string {
+  override toString(): string {
     // Using sv (Sweden) as it uses iso time format
     return super.toString() + `: scheduled=${this.#nextRunEpochString()}`;
   }
@@ -111,7 +111,7 @@ class ScheduledEvent extends BaseEvent {
   /**
    * Performs function
    */
-  tick(): Promise<any> {
+  override tick(): Promise<any> {
     return (
       super
         .tick()
@@ -146,14 +146,14 @@ class RepeatableEvent extends ScheduledEvent {
     this.#intervalSec = intervalSec;
   }
 
-  toString(): string {
+  override toString(): string {
     return super.toString() + `, repeatable every ${this.#intervalSec / 60}m`;
   }
 
   /**
    * Perform function
    */
-  tick(): Promise<any> {
+  override tick(): Promise<any> {
     return (
       super
         .tick()
@@ -204,7 +204,7 @@ class Scheduler {
     const eventsToRun: ScheduledEvent[] = [];
 
     // Scheduled events are always sorted and at least one element exists.
-    while (Scheduler.#scheduledEvents[0].nextRunEpochSec() <= nowSec) {
+    while (Scheduler.#scheduledEvents[0]!.nextRunEpochSec() <= nowSec) {
       eventsToRun.push(Scheduler.#scheduledEvents.shift()!);
     }
 

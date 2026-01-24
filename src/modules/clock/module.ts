@@ -15,7 +15,7 @@ export class ClockModule extends ScheduledModuleInterface {
     super(0);
   }
 
-  refresh(forced: boolean): RefreshResult {
+  override refresh(forced: boolean): RefreshResult {
     const now = new Date();
     const value = now.toLocaleTimeString([], {timeStyle: 'medium'});
     let extendedValue: string[] | undefined;
@@ -35,7 +35,7 @@ export class ClockModule extends ScheduledModuleInterface {
     };
   }
 
-  getDefaultConfig(): DefaultConfig {
+  override getDefaultConfig(): DefaultConfig {
     return {
       version: 0,
       mergeStrategy: 'STORED_OR_DEFAULT',
@@ -58,7 +58,7 @@ export class ClockModule extends ScheduledModuleInterface {
     };
   }
 
-  setConfig(config: Record<string, string>): void {
+  override setConfig(config: Record<string, string>): void {
     this.#timezones = Object.entries(config).map(([label, timeZone]) => ({
       label,
       format: {timeStyle: 'short', timeZone},

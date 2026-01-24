@@ -30,7 +30,7 @@ export class SongModule extends FirebaseBaseModule {
     super('/songs/current', CSS, HELP);
   }
 
-  protected _onValue(data: unknown): RefreshResultItem[] {
+  protected override _onValue(data: unknown): RefreshResultItem[] {
     const song = data as Song;
     // Some code is commented here - copied from the old one
     // TODO: clean it and add auto expiring of songs

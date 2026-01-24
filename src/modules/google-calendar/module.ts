@@ -37,7 +37,7 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
     this.#requiredLocationPrefix = [];
   }
 
-  refresh(forced: boolean): Promise<RefreshResult> | RefreshResult {
+  override refresh(forced: boolean): Promise<RefreshResult> | RefreshResult {
     if (this.#connector) {
       console.groupCollapsed(
         `CalendarModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`,
@@ -133,14 +133,14 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
       .finally(() => console.groupEnd());
   }
 
-  getDefaultConfig(): DefaultConfig {
+  override getDefaultConfig(): DefaultConfig {
     return DEFAULT_CONFIG;
   }
 
-  setConfig(config: Record<string, string>): void {
-    this.#sourceCalendars = config.sourceCalendars.split(',');
-    this.#destinationCalendar = config.destinationCalendar;
-    this.#requiredLocationPrefix = config.requiredLocationPrefix.split(',');
+  override setConfig(config: Record<string, string>): void {
+    this.#sourceCalendars = config['sourceCalendars']?.split(',') || [];
+    this.#destinationCalendar = config['destinationCalendar'] || '';
+    this.#requiredLocationPrefix = config['requiredLocationPrefix']?.split(',') || [];
     const oAuthOrError = processOAuth(this, config);
     if (oAuthOrError instanceof OAuth) {
       this.#connector = new CalendarConnector(oAuthOrError);

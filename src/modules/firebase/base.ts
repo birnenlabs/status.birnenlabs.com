@@ -38,7 +38,7 @@ export class FirebaseBaseModule extends PushModuleInterface {
     this.#unsubscribe = () => {};
   }
 
-  getDefaultConfig(): DefaultConfig {
+  override getDefaultConfig(): DefaultConfig {
     return {
       version: 0,
       mergeStrategy: 'DEFAULT_WITH_STORED_EXCLUSIVE',
@@ -56,10 +56,10 @@ export class FirebaseBaseModule extends PushModuleInterface {
     };
   }
 
-  setConfig(config: Record<string, string>): void {
+  override setConfig(config: Record<string, string>): void {
     this.#unsubscribe();
-    if (config.databaseUrl && config.databaseToken && config.databaseToken.length >= 20) {
-      const firebaseConfig = {databaseURL: config.databaseUrl};
+    if (config['databaseUrl'] && config['databaseToken'] && config['databaseToken'].length >= 20) {
+      const firebaseConfig = {databaseURL: config['databaseUrl']};
       try {
         this.#firebaseApp = initializeApp(firebaseConfig);
       } catch (e: any) {
@@ -68,7 +68,7 @@ export class FirebaseBaseModule extends PushModuleInterface {
         }
       }
       const database = getDatabase(this.#firebaseApp);
-      const dbRef = ref(database, config.databaseToken + this.#databasePath);
+      const dbRef = ref(database, config['databaseToken'] + this.#databasePath);
       this.#unsubscribe = onValue(dbRef, (snapshot: DataSnapshot) => this.#onValue(snapshot?.val()));
     } else {
       const err = new Error('Url or token empty or too short, not subscribing to the database.');

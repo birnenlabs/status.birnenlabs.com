@@ -11,7 +11,7 @@ export class DateModule extends ScheduledModuleInterface {
     super(24 * 60);
   }
 
-  refresh(forced: boolean): RefreshResult {
+  override refresh(forced: boolean): RefreshResult {
     console.log(forced);
     const now = new Date();
     return {
@@ -23,7 +23,7 @@ export class DateModule extends ScheduledModuleInterface {
     };
   }
 
-  getDefaultConfig(): DefaultConfig {
+  override getDefaultConfig(): DefaultConfig {
     return {
       version: 0,
       mergeStrategy: 'DEFAULT_WITH_STORED_EXCLUSIVE',
@@ -32,7 +32,7 @@ export class DateModule extends ScheduledModuleInterface {
     };
   }
 
-  setConfig(config: Record<string, string>): void {
+  override setConfig(config: Record<string, string>): void {
     console.log(config);
   }
 }
