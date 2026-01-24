@@ -1,6 +1,4 @@
-/**
- * @typedef {import("../interface.js").DefaultConfig} DefaultConfig
- */
+import { DefaultConfig } from '../interface';
 
 const CONFIG_HELP = `
 This module will display tasks from the provided lists. The following task types will be displayed
@@ -32,8 +30,7 @@ If authentication stopped working, the easiest soluition is to increase the "oau
 which will force reauthentication.
 `;
 
-/** @type {DefaultConfig} */
-export const DEFAULT_CONFIG = {
+export const DEFAULT_CONFIG: DefaultConfig = {
   version: 0,
   mergeStrategy: 'DEFAULT_WITH_STORED_EXCLUSIVE',
   help: CONFIG_HELP,

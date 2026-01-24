@@ -1,6 +1,6 @@
-import {ModuleInterface} from '/pwa/status/js/modules/interface.js';
-import {OAuth, OAuthSettings} from '/jslib/js/oauth.js';
-import {setModuleConfigString, objectToString} from '/pwa/status/js/settings/settings.js';
+import {ModuleInterface} from '../interface';
+import {OAuth, OAuthSettings} from '../../lib/oauth';
+import {setModuleConfigString, objectToString} from '../../settings/settings';
 
 /**
  * !!!!!!!!!! IMPORTANT: This file is reused by the tasks module. !!!!!!!!!!
@@ -11,12 +11,8 @@ import {setModuleConfigString, objectToString} from '/pwa/status/js/settings/set
  * - it will sync the module config with the oAuth config
  * - it will redirect user (or return the error code) if oauthStartAuthenticationFlow == true
  * The return value is either an error message or valid OAuth library.
- *
- * @param {ModuleInterface} module
- * @param {Object<string, string>} config
- * @return {OAuth|string}
  */
-export function processOAuth(module, config) {
+export function processOAuth(module: ModuleInterface, config: Record<string, string>): OAuth | string {
   const settings = syncAndGetOAuthSettings(module, config);
 
   // If oauthStartAuthenticationFlow then start the process.
@@ -57,12 +53,8 @@ export function processOAuth(module, config) {
 
 /**
  * Creates oAuth settings from the module config, saves them and returnes.
- *
- * @param {ModuleInterface} module
- * @param {Object<string, string>} config
- * @return {OAuthSettings}
  */
-function syncAndGetOAuthSettings(module, config) {
+function syncAndGetOAuthSettings(module: ModuleInterface, config: Record<string, string>): OAuthSettings {
   // Sync OAuth with the module settings
   const oAuthSettings = new OAuthSettings(module.name + '-oauth-v' + config.oauthSettingsVersion);
   oAuthSettings.setOAuthUrl('https://accounts.google.com/o/oauth2/auth');

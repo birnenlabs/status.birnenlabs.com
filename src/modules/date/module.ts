@@ -1,9 +1,4 @@
-import {ScheduledModuleInterface} from '/pwa/status/js/modules/interface.js';
-
-/**
- * @typedef {import("../interface.js").RefreshResult} RefreshResult
- * @typedef {import("../interface.js").DefaultConfig} DefaultConfig
- */
+import { DefaultConfig, RefreshResult, ScheduledModuleInterface } from '../interface';
 
 /**
  * Implements ScheduledModuleInterface
@@ -16,11 +11,8 @@ export class DateModule extends ScheduledModuleInterface {
     super(24 * 60);
   }
 
-  /**
-   * @param {boolean} forced
-   * @return {RefreshResult}
-   */
-  refresh(forced) {
+  refresh(forced: boolean): RefreshResult {
+    console.log(forced);
     const now = new Date();
     return {
       items: [{
@@ -29,10 +21,7 @@ export class DateModule extends ScheduledModuleInterface {
     };
   }
 
-  /**
-   * @return {DefaultConfig}
-   */
-  getDefaultConfig() {
+  getDefaultConfig(): DefaultConfig {
     return {
       version: 0,
       mergeStrategy: 'DEFAULT_WITH_STORED_EXCLUSIVE',
@@ -41,9 +30,7 @@ export class DateModule extends ScheduledModuleInterface {
     };
   }
 
-  /**
-   * @param {Object<string, string>} config
-   */
-  setConfig(config) {
+  setConfig(config: Record<string, string>): void {
+    console.log(config);
   }
 }

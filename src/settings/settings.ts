@@ -1,36 +1,23 @@
-import {ModuleInterface} from '../modules/interface.js';
+import {ModuleInterface} from '../modules/interface';
 
 const LOCAL_STORAGE_ENABLED = 'status-modules-enabled';
 
-/**
- * @return {string[]}
- */
-export function getEnabledModules() {
+export function getEnabledModules(): string[] {
   return getEnabledModulesString().split('\n').filter((v) => v);
 }
 
-/**
- * @return {string}
- */
-export function getEnabledModulesString() {
+export function getEnabledModulesString(): string {
   const result = localStorage.getItem(LOCAL_STORAGE_ENABLED) || '';
   console.log(`Settings.getEnabledModules:\n${result}`);
   return result;
 }
 
-/**
- * @param {string} modules
- */
-export function setEnabledModulesString(modules) {
+export function setEnabledModulesString(modules: string): void {
   console.log(`Settings.setEnabledModules:\n${modules}`);
   localStorage.setItem(LOCAL_STORAGE_ENABLED, modules);
 }
 
-/**
- * @param {ModuleInterface} module
- * @param {string|null} value
- */
-export function setModuleConfigString(module, value) {
+export function setModuleConfigString(module: ModuleInterface, value: string | null): void {
   if (value) {
     console.groupCollapsed('Settings.setModuleConfig()');
     console.log(value);
@@ -42,28 +29,13 @@ export function setModuleConfigString(module, value) {
   }
 }
 
-/**
- * @param {ModuleInterface} module
- * @return {string|null}
- */
-export function getModuleConfigString(module) {
+export function getModuleConfigString(module: ModuleInterface): string | null {
   return localStorage.getItem(moduleConfigKey(module));
 }
 
-/**
- * Method will return object configuration.
- * The config might be merged from the object default configuration
- * and stored configuration.
- *
- * @param {ModuleInterface} module
- * @return {Object<string, string>}
- */
-export function getModuleConfig(module) {
-  /** @type {string|null} */
+export function getModuleConfig(module: ModuleInterface): Record<string, string> {
   const storedConfigString = getModuleConfigString(module);
-  /** @type {Object<string, string>} */
-  const storedConfig = stringToObject(storedConfigString || '');
-  /** @type {Object<string, string>} */
+  const storedConfig: Record<string, string> = stringToObject(storedConfigString || '');
   const defaultConfig = module.getDefaultConfig().template;
   const mergeStrategy = module.getDefaultConfig().mergeStrategy;
 
@@ -72,8 +44,7 @@ export function getModuleConfig(module) {
   console.log('Stored config:\n' + objectToString(storedConfig));
   console.log('Merge strategy: ' + mergeStrategy);
 
-  /** @type {Object<string, string>} */
-  let result = {};
+  let result: Record<string, string> = {};
   for (const [key, value] of Object.entries(defaultConfig)) {
     result[key] = value;
   }
@@ -103,19 +74,11 @@ export function getModuleConfig(module) {
   return result;
 }
 
-/**
- * @param {Object<string, string>} o
- * @return {string}
- */
-export function objectToString(o) {
+export function objectToString(o: Record<string, string>): string {
   return Object.entries(o).map(([k, v]) => `${k}:${v}`).join('\n');
 }
 
-/**
- * @param {string} s
- * @return {Object<string, string>}
- */
-export function stringToObject(s) {
+export function stringToObject(s: string): Record<string, string> {
   return Object.fromEntries(
       s.split('\n')
           .filter((line) => line)
@@ -123,10 +86,6 @@ export function stringToObject(s) {
           .map((arr) => [arr[0], arr.slice(1).join(':')]));
 }
 
-/**
- * @param {ModuleInterface} module
- * @return {string}
- */
-function moduleConfigKey(module) {
+function moduleConfigKey(module: ModuleInterface): string {
   return `${module.name}-config-v${module.getDefaultConfig().version}`;
 }

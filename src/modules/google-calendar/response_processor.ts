@@ -1,11 +1,6 @@
-import {ELLIPSIS} from '/pwa/status/js/modules/interface.js';
-import {dateToSec, EPOCH_FUTURE, getNowSec, secToDate} from '/jslib/js/scheduler.js';
-import {CalendarEntry} from './calendar_entry.js';
-
-/**
- * @typedef {import("../interface.js").RefreshResult} RefreshResult
- * @typedef {import("../interface.js").RefreshResultItem} RefreshResultItem
- */
+import {ELLIPSIS, RefreshResult, RefreshResultItem} from '../interface';
+import {dateToSec, EPOCH_FUTURE, getNowSec, secToDate} from '../../lib/scheduler';
+import {CalendarEntry} from './calendar_entry';
 
 /**
  * The following css classes are set by the code below:
@@ -38,15 +33,9 @@ export const CSS = [
 
 /**
    * Filters inputEntries and creats RefreshResult.
-   *
-   * @param {CalendarEntry[]} inputEntries
-   * @param {string[]} sourceCalendars
-   * @param {string[]} requiredLocationPrefix
-   * @return {RefreshResult}
    */
-export function createRefreshResult(inputEntries, sourceCalendars, requiredLocationPrefix) {
-  /** @type {RefreshResultItem[]} */
-  const items = [];
+export function createRefreshResult(inputEntries: CalendarEntry[], sourceCalendars: string[], requiredLocationPrefix: string[]): RefreshResult {
+  const items: RefreshResultItem[] = [];
 
   const requiredLocationsMap = new Map(sourceCalendars.map((key, index) => [key, requiredLocationPrefix[index]]));
   const firstSourceCalendar = sourceCalendars.at(0);
@@ -67,10 +56,8 @@ export function createRefreshResult(inputEntries, sourceCalendars, requiredLocat
 
   console.log(`Skipped ${inputEntries.length - calendarEntries.length} expired or suppressed items.`);
 
-  /** @type {number} */
-  let nextUpdateTs = EPOCH_FUTURE;
+  let nextUpdateTs: number = EPOCH_FUTURE;
 
-  /** @type {number} */
   let i = 0;
 
   // Scroll i past full day events
@@ -95,8 +82,7 @@ export function createRefreshResult(inputEntries, sourceCalendars, requiredLocat
     console.log(`Next update from this event: ${secToDate(nextUpdateTs).toLocaleString('sv')} [earliest so far]`);
 
     const entry = calendarEntries[firstAllDayEventIndex];
-    /** @type {RefreshResultItem} */
-    const item = {
+    const item: RefreshResultItem = {
       value: entry.title(),
       extendedValue: '',
       classNames: [`calendarItem-firstCalendar-${hasFirstCalendarEvent}`],
@@ -108,7 +94,7 @@ export function createRefreshResult(inputEntries, sourceCalendars, requiredLocat
       item.extendedValue = [];
       for (let j = 0; j < i; j++) {
         if (j != firstAllDayEventIndex) {
-          item.extendedValue.push(calendarEntries[j].title());
+          (item.extendedValue as string[]).push(calendarEntries[j].title());
         }
       }
     }
@@ -121,7 +107,7 @@ export function createRefreshResult(inputEntries, sourceCalendars, requiredLocat
     const entry = calendarEntries[i];
     console.group(`${entry}`);
 
-    const item = {
+    const item: RefreshResultItem = {
       value: `${entry.startTime()}: `,
       extendedValue: '',
       classNames: [
@@ -138,7 +124,7 @@ export function createRefreshResult(inputEntries, sourceCalendars, requiredLocat
 
     const requiredLocation = requiredLocationsMap.get(entry.getCalendarId());
     if (requiredLocation && !entry.location()?.includes(requiredLocation)) {
-      item.classNames.push('calendarItem-missingRoom');
+      item.classNames!.push('calendarItem-missingRoom');
     }
 
     const entryNextUpdateTs = entry.nextUpdateTs(nowSec);

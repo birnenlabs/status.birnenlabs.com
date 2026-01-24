@@ -2,22 +2,22 @@ import {loadModules} from './modules/loader';
 import {initModuleRenderer} from './modules/renderer';
 import {init, render, mousemove, mouseover, mouseout} from './html';
 
-function onPageLoad():Promise<any> {
+async function onPageLoad(): Promise<void> {
   const consoleLog = 'Modules: init';
   console.time(consoleLog);
   console.group(consoleLog);
 
-  const modules = loadModules();
-  init(modules);
+  try {
+    const modules = loadModules();
+    init(modules);
 
-  let result = Promise.resolve();
-  for (const module of modules) {
-    result = result.then(() => initModuleRenderer(module, render));
+    for (const module of modules) {
+      await initModuleRenderer(module, render);
+    }
+  } finally {
+    console.groupEnd();
+    console.timeEnd(consoleLog);
   }
-
-  return result
-      .finally(() => console.groupEnd())
-      .finally(() => console.timeEnd(consoleLog));
 }
 
 
@@ -26,55 +26,54 @@ function onPageLoad():Promise<any> {
  * amount of pixels. If it is moved off screen it might happen that part of it is not visible.
  * This code will detect actual visible height and will set the css to center the font.
  */
-function calculateVisibleArea() {
+function calculateVisibleArea(): void {
+  const screen = window.screen as any;
   const areaHeight =
        Math.min(
            Math.min(
-               (window.screen.availHeight || window.screen.height) - window.screenTop + ( /** window.screen.availTop is an experimental property */ ( /** @type {any} */ (window.screen)).availTop || 0),
+               (screen.availHeight || screen.height) - window.screenTop + (screen.availTop || 0),
                window.innerHeight),
            // Limit max height to 60px
            60);
-  const el = (document.getElementById('main-container') as HTMLDivElement);
-
-  // main container will have the same height as visible area
-  el.style.height = areaHeight + 'px';
-  // line height will cause child elements to center vertically
-  el.style.lineHeight = areaHeight + 'px';
-  el.style.fontSize = (0.6 * areaHeight) + 'px';
-
-  // Padding doesn't affect font position as this is already decided by the line height parameter.
-  // It is only used to extend clickable areas of span elements and should use the entire block
-  // height.
-//
-// Commenting out for now - let's use rectangular shape and predefined padding.
-//
-//  const padding = (areaHeight / 7) + 'px';
-//  checkNonUndefined(document.getElementById('visible-area-style')).innerHTML=`.box { padding-top: ${padding}; padding-bottom: ${padding}; }`;
+  const el = document.getElementById('main-container');
+  if (el instanceof HTMLDivElement) {
+    // main container will have the same height as visible area
+    el.style.height = `${areaHeight}px`;
+    // line height will cause child elements to center vertically
+    el.style.lineHeight = `${areaHeight}px`;
+    el.style.fontSize = `${0.6 * areaHeight}px`;
+  }
 }
 
 /**
  * Init mouse over events
  */
-function setMouseOver() {
-  const el = (document.getElementById('main-container') as HTMLDivElement);
-  el.addEventListener('mouseover', mouseover, false);
-  el.addEventListener('mouseout', mouseout, false);
-  el.addEventListener('mousemove', mousemove, false);
+function setMouseOver(): void {
+  const el = document.getElementById('main-container');
+  if (el instanceof HTMLDivElement) {
+    el.addEventListener('mouseover', mouseover, false);
+    el.addEventListener('mouseout', mouseout, false);
+    el.addEventListener('mousemove', mousemove, false);
+  }
 }
 
 /** init settings */
-function initSettingsLink() {
-  const el = (document.getElementById('settings-link') as HTMLSpanElement);
-  el.onclick = () => window.open('https://birnenlabs.com/pwa/status/settings/', 'window', 'toolbar=no,menubar=no,resizable=yes');
+function initSettingsLink(): void {
+  const el = document.getElementById('settings-link');
+  if (el instanceof HTMLSpanElement) {
+    el.onclick = () => window.open('https://birnenlabs.com/pwa/status/settings/', 'window', 'toolbar=no,menubar=no,resizable=yes');
+  }
 }
 
 /** set blur class */
-function setBlurClass() {
-  const el = (document.getElementById('main-container') as HTMLDivElement);
-  if (document.hasFocus()) {
-    el.classList.remove('blur');
-  } else {
-    el.classList.add('blur');
+function setBlurClass(): void {
+  const el = document.getElementById('main-container');
+  if (el instanceof HTMLDivElement) {
+    if (document.hasFocus()) {
+      el.classList.remove('blur');
+    } else {
+      el.classList.add('blur');
+    }
   }
 }
 

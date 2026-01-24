@@ -1,11 +1,13 @@
-import {FirebaseBaseModule} from './base.js';
-import {ELLIPSIS} from '/pwa/status/js/modules/interface.js';
+import { CustomCss, ELLIPSIS, RefreshResultItem } from '../interface';
+import { FirebaseBaseModule } from './base';
 
-/**
- * @typedef {import("../interface.js").RefreshResultItem} RefreshResultItem
- */
+interface Song {
+  title?: string;
+  artist?: string;
+  timestampMin?: number;
+}
 
-const CSS = [
+const CSS: CustomCss[] = [
   {
     className: 'default',
     color: 'lightgreen',
@@ -28,11 +30,8 @@ export class SongModule extends FirebaseBaseModule {
     super('/songs/current', CSS, HELP);
   }
 
-  /**
-   * @param {Object} data
-   * @return {RefreshResultItem[]|Error}
-   */
-  _onValue(data) {
+  protected _onValue(data: unknown): RefreshResultItem[] {
+    const song = data as Song;
     // Some code is commented here - copied from the old one
     // TODO: clean it and add auto expiring of songs
     // Song should be updated every minute.
@@ -40,21 +39,20 @@ export class SongModule extends FirebaseBaseModule {
 
     // TODO update documentation when adding expiration
 
-    /** @type {boolean} */
-    const showSong = !!data?.title; // && (nowTimestampMin - (data?.timestampMin || 0)) <= 1;
+    const showSong = !!song?.title; // && (nowTimestampMin - (song?.timestampMin || 0)) <= 1;
 
-    if (showSong) {
-      const titleSplit = data.title.split(' ').filter((i) => i);
+    if (showSong && song.title) {
+      const titleSplit = song.title.split(' ').filter((i) => i);
       // Let's display at most 5 words from the title.
       const split = titleSplit.length > 6;
       return [{
-        value: `${data.artist} - ${titleSplit.slice(0, split ? 5 : undefined).join(' ')}${split ? ELLIPSIS : ''}`,
+        value: `${song.artist} - ${titleSplit.slice(0, split ? 5 : undefined).join(' ')}${split ? ELLIPSIS : ''}`,
         extendedValue: split ? ` ${titleSplit.slice(5).join(' ')}` : '',
         classNames: ['default'],
       }];
     } else {
+      console.log('SongModule onValue - expired or empty song', song);
       return [];
-      console.log('SongModule onValue - expired or empty song', data);
     }
   }
 }

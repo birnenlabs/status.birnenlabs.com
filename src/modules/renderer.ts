@@ -1,26 +1,15 @@
-import {PushModuleInterface, ScheduledModuleInterface} from './interface.js';
-import {Event} from '/jslib/js/scheduler.js';
-import {combine2} from '/jslib/js/promise.js';
+import {PushModuleInterface, ScheduledModuleInterface, RefreshResult, RenderHtmlCallback} from './interface';
+import {Event} from '../lib/scheduler';
+import {combine} from '../lib/promise';
 
-
-/**
- * @typedef {import("./interface.js").RefreshResult} RefreshResult
- * @typedef {import("./interface.js").RefreshResultItem} RefreshResultItem
- * @typedef {import("./interface.js").RenderHtmlCallback} RenderHtmlCallback
- */
-
-/**
- * @param {ScheduledModuleInterface} module
- * @param {RenderHtmlCallback} renderHtmlCallback
- * @param {boolean} forced
- * @return {Promise<any>}
- */
-function render(module, renderHtmlCallback, forced = false) {
+function render(
+    module: ScheduledModuleInterface,
+    renderHtmlCallback: RenderHtmlCallback,
+    forced: boolean = false): Promise<any> {
   // Don't use Promise.resolve() as moduleRefresh can throw an exception.
   // In this case Promise.resolve(module.refresh()) would never start promise chain
   // and immediatelly fail.
-  /** @type {Promise<RefreshResult>} */
-  const refreshResultPromise = new Promise((resolve, reject) => resolve(module.refresh(forced)));
+  const refreshResultPromise: Promise<RefreshResult> = new Promise((resolve) => resolve(module.refresh(forced)));
 
   const renderResultPromise = refreshResultPromise
       .then((refreshResult) => refreshResult.skipHtmlUpdate ? undefined : refreshResult.items)
@@ -28,20 +17,16 @@ function render(module, renderHtmlCallback, forced = false) {
       .catch((err) => err)
       .then((itemsOrError) => itemsOrError === undefined ? undefined : renderHtmlCallback(module.name, itemsOrError));
 
-  return combine2(refreshResultPromise, renderResultPromise, (refreshResult, unused) => refreshResult)
-      .then((refreshResult) =>
+  return combine(refreshResultPromise, renderResultPromise, (refreshResult: RefreshResult, _: any) => refreshResult)
+      .then((refreshResult: RefreshResult) =>
         refreshResult.forceNextRefreshTs ?
         Event.at(`${module.name}-forcedUpdate`, () => render(module, renderHtmlCallback, true), refreshResult.forceNextRefreshTs) :
         undefined);
 }
 
-
-/**
- * @param {PushModuleInterface | ScheduledModuleInterface} module
- * @param {RenderHtmlCallback} renderHtmlCallback
- * @return {Promise<any>}
- */
-export function initModuleRenderer(module, renderHtmlCallback) {
+export function initModuleRenderer(
+    module: PushModuleInterface | ScheduledModuleInterface,
+    renderHtmlCallback: RenderHtmlCallback): Promise<any> {
   if (module instanceof PushModuleInterface) {
     module.setCallback(renderHtmlCallback);
     return Promise.resolve();

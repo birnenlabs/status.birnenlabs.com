@@ -1,3 +1,5 @@
+import { DefaultConfig } from "../interface";
+
 const CONFIG_HELP = `
 GOOGLE CALENDAR AUTHENTICATION
 
@@ -17,10 +19,10 @@ Then copy the client Id and client Secret to the settings.
 If authentication stopped working or you want to change the scope after calendar was initialised, the easiest way is to increase the "oauthSettingsVersion" value, which will force reauthentication.
 `;
 
-export const DEFAULT_CONFIG =
+export const DEFAULT_CONFIG: DefaultConfig =
   {
     version: 0,
-    mergeStrategy: /** @type {'DEFAULT_WITH_STORED_EXCLUSIVE'} */ ('DEFAULT_WITH_STORED_EXCLUSIVE'),
+    mergeStrategy: 'DEFAULT_WITH_STORED_EXCLUSIVE',
     help: CONFIG_HELP,
     helpTemplate: {
       oauthSettingsVersion: 'Number that is used as a key prefix of the OAuth settings. Increase to start the oAuth flow again.',
@@ -43,5 +45,3 @@ export const DEFAULT_CONFIG =
       requiredLocationPrefix: '',
     },
   };
-
-

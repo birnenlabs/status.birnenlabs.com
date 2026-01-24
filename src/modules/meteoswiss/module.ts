@@ -1,11 +1,6 @@
-import {ScheduledModuleInterface} from '/pwa/status/js/modules/interface.js';
-import {MeteoSwissLib} from './lib.js';
-import {combine4} from '/jslib/js/promise.js';
-
-/**
- * @typedef {import("../interface.js").RefreshResult} RefreshResult
- * @typedef {import("../interface.js").DefaultConfig} DefaultConfig
- */
+import { CustomCss, DefaultConfig, RefreshResult, ScheduledModuleInterface } from '../interface';
+import { MeteoSwissLib } from './lib';
+import { combine } from '../../lib/promise';
 
 const DEFAULT_RAIN_COLOR = '#33ccff';
 
@@ -30,22 +25,20 @@ Use this map to get coordinates for your area: https://tools.retorte.ch/map/. Th
  * Implements ScheduledModuleInterface
  */
 export class MeteoSwissModule extends ScheduledModuleInterface {
-  /** @type {MeteoSwissLib|undefined} */
-  #meteoSwissLib;
+  #meteoSwissLib: MeteoSwissLib | undefined;
+  public css: CustomCss[];
 
   /**
    * Constructor
    */
   constructor() {
-    super(20, MeteoSwissModule.#createCss(DEFAULT_RAIN_COLOR));
+    const css = MeteoSwissModule.#createCss(DEFAULT_RAIN_COLOR);
+    super(20, css);
+    this.css = css;
   }
 
-  /**
-   * @param {boolean} forced
-   * @return {Promise<RefreshResult>}
-   */
-  refresh(forced) {
-    const consoleLog = `MeteoSwissModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`;
+  public refresh(forced: boolean): Promise<RefreshResult> {
+    const consoleLog = `MeteoSwissModule.refresh(${forced}) ${new Date().toLocaleTimeString([], { timeStyle: 'short' })}`;
     if (this.#meteoSwissLib === undefined) {
       const err = new Error('Config is not set.');
       console.error(err);
@@ -54,29 +47,24 @@ export class MeteoSwissModule extends ScheduledModuleInterface {
     console.time(consoleLog);
     console.groupCollapsed(consoleLog);
 
-    return combine4(
-        this.#meteoSwissLib.getTemperature(),
-        this.#meteoSwissLib.getHumidity(),
-        this.#meteoSwissLib.getWind(),
-        this.#meteoSwissLib.isRaining(),
-        (temperature, humidity, wind, isRaining) =>
-          ({
-            items: [{
-              value: temperature,
-              extendedValue: [humidity, wind],
-              href: 'https://www.meteoswiss.admin.ch/services-and-publications/applications/precipitation.html',
-              classNames: isRaining ? ['rain'] : [],
-            }],
-          }))
-        .finally(() => console.groupEnd())
-        .finally(() => console.timeEnd(consoleLog));
+    return combine(
+      this.#meteoSwissLib.getTemperature(),
+      this.#meteoSwissLib.getHumidity(),
+      this.#meteoSwissLib.getWind(),
+      this.#meteoSwissLib.isRaining(),
+      (temperature, humidity, wind, isRaining): RefreshResult => ({
+        items: [{
+          value: temperature,
+          extendedValue: [humidity, wind],
+          href: 'https://www.meteoswiss.admin.ch/services-and-publications/applications/precipitation.html',
+          classNames: isRaining ? ['rain'] : [],
+        }],
+      })
+    ).finally(() => console.groupEnd())
+      .finally(() => console.timeEnd(consoleLog));
   }
 
-  /**
-   * @param {string} rainColor
-   * @return {Object}
-   */
-  static #createCss(rainColor) {
+  static #createCss(rainColor: string): CustomCss[] {
     return [
       {
         className: 'rain',
@@ -85,10 +73,7 @@ export class MeteoSwissModule extends ScheduledModuleInterface {
     ];
   }
 
-  /**
-   * @return {DefaultConfig}
-   */
-  getDefaultConfig() {
+  public getDefaultConfig(): DefaultConfig {
     return {
       version: 0,
       mergeStrategy: 'DEFAULT_WITH_STORED_EXCLUSIVE',
@@ -110,15 +95,13 @@ export class MeteoSwissModule extends ScheduledModuleInterface {
     };
   }
 
-  /**
-   * @param {Object<string, string>} config
-   */
-  setConfig(config) {
+  public setConfig(config: Record<string, string>): void {
     this.#meteoSwissLib = new MeteoSwissLib(
-        parseInt(config.workY),
-        parseInt(config.workX),
-        parseInt(config.homeY),
-        parseInt(config.homeX));
+      parseInt(config.workY, 10),
+      parseInt(config.workX, 10),
+      parseInt(config.homeY, 10),
+      parseInt(config.homeX, 10)
+    );
     this.css = MeteoSwissModule.#createCss(config.rainColor);
   }
 }

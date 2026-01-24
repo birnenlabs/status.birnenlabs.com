@@ -1,19 +1,19 @@
-import {PushModuleInterface, ScheduledModuleInterface} from '/pwa/status/js/modules/interface.js';
+import {
+  CustomCss,
+  DefaultConfig,
+  PushModuleInterface,
+  RefreshResult,
+  ScheduledModuleInterface
+} from '../interface';
 
-/**
- * @typedef {import("../interface.js").RefreshResult} RefreshResult
- * @typedef {import("../interface.js").DefaultConfig} DefaultConfig
- */
-
-const CSS = [
+const CSS: CustomCss[] = [
   {
     className: 'some-class',
     color: '#55f',
   },
 ];
 
-/** @type {DefaultConfig} */
-const CONFIG = {
+const CONFIG: DefaultConfig = {
   version: 0,
   mergeStrategy: 'DEFAULT_WITH_STORED_EXCLUSIVE',
   help: 'Help text to be printed on the settings page above the configuration.',
@@ -31,22 +31,16 @@ const CONFIG = {
  * Implements ScheduledModuleInterface
  */
 export class ExampleScheduledModule extends ScheduledModuleInterface {
-  /** @type {number} */
-  #counter;
+  #counter = 0;
 
   /**
    * Constructor
    */
   constructor() {
     super(0, CSS);
-    this.#counter = 0;
   }
 
-  /**
-   * @param {boolean} forced
-   * @return {Promise<RefreshResult>}
-   */
-  refresh(forced) {
+  refresh(forced: boolean): Promise<RefreshResult> {
     const consoleLog = `ExampleModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`;
     console.time(consoleLog);
     console.groupCollapsed(consoleLog);
@@ -63,17 +57,12 @@ export class ExampleScheduledModule extends ScheduledModuleInterface {
         .finally(() => console.timeEnd(consoleLog));
   }
 
-  /**
-   * @return {DefaultConfig}
-   */
-  getDefaultConfig() {
+  getDefaultConfig(): DefaultConfig {
     return CONFIG;
   }
 
-  /**
-   * @param {Object<string, string>} config
-   */
-  setConfig(config) {
+  setConfig(config: Record<string, string>): void {
+    console.log(config);
   }
 }
 
@@ -81,15 +70,13 @@ export class ExampleScheduledModule extends ScheduledModuleInterface {
  * Implements PushModuleInterface
  */
 export class ExamplePushModule extends PushModuleInterface {
-  /** @type {number} */
-  #counter;
+  #counter = 0;
 
   /**
    * constructor
    */
   constructor() {
     super([], CSS);
-    this.#counter = 0;
 
     setInterval(() => this._pushRefresh([{
       value: 'Hello. I am push module, push count: ' + this.#counter++,
@@ -98,17 +85,11 @@ export class ExamplePushModule extends PushModuleInterface {
     }]), 2000);
   }
 
-  /**
-   * @return {DefaultConfig}
-   */
-  getDefaultConfig() {
+  getDefaultConfig(): DefaultConfig {
     return CONFIG;
   }
 
-  /**
-   * @param {Object<string, string>} config
-   */
-  setConfig(config) {
+  setConfig(config: Record<string, string>): void {
+    console.log(config);
   }
 }
-

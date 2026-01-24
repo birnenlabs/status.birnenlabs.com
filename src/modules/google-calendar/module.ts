@@ -1,16 +1,10 @@
-import {ScheduledModuleInterface} from '/pwa/status/js/modules/interface.js';
-import {processOAuth} from './oauth.js';
-import {CalendarConnector, CalendarResult} from './connector.js';
-import {createRefreshResult, CSS} from './response_processor.js';
-import {OAuth} from '/jslib/js/oauth.js';
-import {checkNonUndefined} from '/jslib/js/preconditions.js';
-import {combine2} from '/jslib/js/promise.js';
-import {DEFAULT_CONFIG} from './config.js';
-
-/**
- * @typedef {import("../interface.js").RefreshResult} RefreshResult
- * @typedef {import("../interface.js").DefaultConfig} DefaultConfig
- */
+import {ScheduledModuleInterface, RefreshResult, DefaultConfig} from '../interface';
+import {processOAuth} from './oauth';
+import {CalendarConnector, CalendarResult} from './connector';
+import {createRefreshResult, CSS} from './response_processor';
+import {OAuth} from '../../lib/oauth';
+import {combine} from '../../lib/promise';
+import {DEFAULT_CONFIG} from './config';
 
 // Force sync and render calendar once per 6 hours.
 const MAX_INTERVAL_BETWEEN_SYNC_MS = 21600000;
@@ -19,30 +13,14 @@ const MAX_INTERVAL_BETWEEN_SYNC_MS = 21600000;
  * Implements ScheduledModuleInterface
  */
 export class GoogleCalendarModule extends ScheduledModuleInterface {
-  /** @type {CalendarConnector|undefined} */
-  #connector;
+  #connector: CalendarConnector | undefined;
+  #errorMessage: string;
+  #sourceCalendars: string[];
+  #destinationCalendar: string;
+  #requiredLocationPrefix: string[];
+  #lastRenderMillis: number = 0;
+  #lastSyncMillis: number = 0;
 
-  /** @type {string} */
-  #errorMessage;
-
-  /** @type {string[]} */
-  #sourceCalendars;
-
-  /** @type {string} */
-  #destinationCalendar;
-
-  /** @type {string[]} */
-  #requiredLocationPrefix;
-
-  /** @type {number} */
-  #lastRenderMillis = 0;
-
-  /** @type {number} */
-  #lastSyncMillis = 0;
-
-  /**
-   * constructor
-   */
   constructor() {
     // Let's repeat every 4 minuts - it will not interfere with the usual scheduling
     // times at full and half hour.
@@ -54,13 +32,12 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
     super(4, CSS);
 
     this.#errorMessage = 'Configuration was not set.';
+    this.#sourceCalendars = [];
+    this.#destinationCalendar = '';
+    this.#requiredLocationPrefix = [];
   }
 
-  /**
-   * @param {boolean} forced
-   * @return {Promise<RefreshResult>|RefreshResult}
-   */
-  refresh(forced) {
+  refresh(forced: boolean): Promise<RefreshResult> | RefreshResult {
     if (this.#connector) {
       console.groupCollapsed(`CalendarModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`);
       const timeSync = 'CalendarModule.refresh: sync time';
@@ -68,11 +45,9 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
       console.time(timeSync);
       console.time(timeRender);
 
-      /** @type {Promise<CalendarResult[]>} */
-      const calendarResultPromise = Promise.all(this.#sourceCalendars.map((calendarId) => checkNonUndefined(this.#connector).retrieveData(calendarId)));
+      const calendarResultPromise: Promise<CalendarResult[]> = Promise.all(this.#sourceCalendars.map((calendarId) => this.#connector!.retrieveData(calendarId)));
 
-      /** @type {Promise<RefreshResult>} */
-      const refreshResultPromise = calendarResultPromise
+      const refreshResultPromise: Promise<RefreshResult> = calendarResultPromise
           .then((results) => this.#createRefreshResult(results, forced))
           .finally(() => console.timeEnd(timeRender));
 
@@ -80,8 +55,8 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
           .then((calendarResult) => this.#maybeSyncCalendar(calendarResult.at(0), forced))
           .finally(() => console.timeEnd(timeSync));
 
-      return combine2(refreshResultPromise, syncPromise, (refreshResult, unused) => refreshResult)
-          .catch((err) => {
+      return combine(refreshResultPromise, syncPromise, (refreshResult: RefreshResult) => refreshResult)
+          .catch((err: Error) => {
             // If error is thrown from this method, it will be rendered. Reset the last render to force it during the next update.
             this.#lastRenderMillis = 0;
             throw err;
@@ -93,12 +68,7 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
     }
   }
 
-  /**
-   * @param {CalendarResult[]} calendarResults
-   * @param {boolean} forced
-   * @return {RefreshResult|Promise<RefreshResult>}
-   */
-  #createRefreshResult(calendarResults, forced) {
+  #createRefreshResult(calendarResults: CalendarResult[], forced: boolean): RefreshResult | Promise<RefreshResult> {
     const errorResult = calendarResults.find((calendarResult) => calendarResult.hasError());
     if (errorResult) {
       return Promise.reject(new Error(errorResult.getError()));
@@ -106,7 +76,6 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
 
     const nowMillis = new Date().getTime();
     if (!forced) {
-      const nowMillis = new Date().getTime();
       const lastUpdateMillis = Math.max(...calendarResults.map((calendarResult) => calendarResult.getLastUpdateMillis()));
       if (nowMillis - this.#lastRenderMillis < MAX_INTERVAL_BETWEEN_SYNC_MS &&
           this.#lastRenderMillis > lastUpdateMillis) {
@@ -119,12 +88,7 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
     return createRefreshResult(entries, this.#sourceCalendars, this.#requiredLocationPrefix);
   }
 
-  /**
-   * @param {CalendarResult|undefined} calendarResult
-   * @param {boolean} forced
-   * @return {Promise<any>}
-   */
-  #maybeSyncCalendar(calendarResult, forced) {
+  #maybeSyncCalendar(calendarResult: CalendarResult | undefined, forced: boolean): Promise<void> {
     if (!this.#destinationCalendar) {
       console.log(`Destination calendar not specified, skipping sync.`);
       return Promise.resolve();
@@ -152,24 +116,18 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
 
     console.group(`Maybe sync calendar: ${calendarResult}`);
     const calendarItems = calendarResult.getCalendarEntries().map((calendarEntry) => calendarEntry.getItem());
-    return checkNonUndefined(this.#connector).syncWithCalendar(calendarItems, this.#destinationCalendar)
+    return this.#connector!.syncWithCalendar(calendarItems, this.#destinationCalendar)
         .then(() => {
           this.#lastSyncMillis = nowMillis;
         })
         .finally(() => console.groupEnd());
   }
 
-  /**
-   * @return {DefaultConfig}
-   */
-  getDefaultConfig() {
+  getDefaultConfig(): DefaultConfig {
     return DEFAULT_CONFIG;
   }
 
-  /**
-   * @param {Object<string, string>} config
-   */
-  setConfig(config) {
+  setConfig(config: Record<string, string>): void {
     this.#sourceCalendars = config.sourceCalendars.split(',');
     this.#destinationCalendar = config.destinationCalendar;
     this.#requiredLocationPrefix = config.requiredLocationPrefix.split(',');

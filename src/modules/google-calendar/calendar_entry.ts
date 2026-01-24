@@ -1,8 +1,33 @@
-import {dateToSec, EPOCH_FUTURE} from '/jslib/js/scheduler.js';
+import {dateToSec, EPOCH_FUTURE} from '../../lib/scheduler';
 
 const NOTIFICATION_IMPORTANT = 300;
 const NOTIFICATION_URGENT = 30;
 const EXPIRATION_TIMEOUT = 900;
+
+type EventStatus = 'accepted' | 'maybe' | 'rejected' | 'suppressed';
+
+// This is from google calendar API response
+export interface CalendarApiItem {
+    summary?: string;
+    location?: string;
+    htmlLink?: string;
+    start: {
+        dateTime?: string; // e.g. '2024-03-25T10:00:00+01:00'
+        date?: string; // e.g. '2024-03-26' for all-day events
+    };
+    end: {
+        dateTime?: string;
+        date?: string;
+    };
+    eventType?: 'outOfOffice' | 'workingLocation';
+    creator?: {
+        self?: boolean;
+    };
+    attendees?: {
+        self?: boolean;
+        responseStatus: 'accepted' | 'declined' | 'needsAction' | 'tentative';
+    }[];
+}
 
 
 /**
@@ -11,55 +36,24 @@ const EXPIRATION_TIMEOUT = 900;
  * This class contains everything needed to create a html element
  */
 export class CalendarEntry {
-  /** @type {string} */
-  #title;
+  #title: string;
+  #location: string;
+  #htmlLink: string;
+  #status: EventStatus;
+  #startTime: Date;
+  #endTime: Date;
+  #startTimeSec: number;
+  #endTimeSec: number;
+  #item: CalendarApiItem;
+  #calendarId: string;
 
-  /** @type {string} */
-  #location;
-
-  /** @type {string} */
-  #htmlLink;
-
-  /**
-   * Type of the event used to sort priorities (using rejested instead of declined to have it sorted)
-   * @type {'accepted'|'maybe'|'rejected'|'suppressed'}
-   */
-  #status;
-
-  /** @type {Date} */
-  #startTime;
-
-  /** @type {Date} */
-  #endTime;
-
-  /** type {number} */
-  #startTimeSec;
-
-  /** @type {number} */
-  #endTimeSec;
-
-  /** @type {Object} */
-  #item;
-
-  /** @type {string} */
-  #calendarId;
-
-  /**
-   * @param {CalendarEntry} e1
-   * @param {CalendarEntry} e2
-   * @return {number}
-   */
-  static compare(e1, e2) {
+  static compare(e1: CalendarEntry, e2: CalendarEntry): number {
     return (e1.#startTime.getTime() - e2.#startTime.getTime()) ||
       e1.#status.localeCompare(e2.#status) ||
       e1.#title.localeCompare(e2.#title);
   }
 
-  /**
-   * @param {Object} item
-   * @param {string} calendarId
-   */
-  constructor(item, calendarId) {
+  constructor(item: CalendarApiItem, calendarId: string) {
     this.#title = item.summary || '(empty)';
     this.#location = item.location || '';
     this.#htmlLink = item.htmlLink || '';
@@ -77,49 +71,27 @@ export class CalendarEntry {
     this.#calendarId = calendarId;
   }
 
-  /**
-   * @return {string}
-   */
-  toString() {
+  toString(): string {
     return `${this.#startTime.toLocaleTimeString([], {timeStyle: 'short'})} - ${this.#endTime.toLocaleTimeString([], {timeStyle: 'short'})}: ${this.#title}, status: ${this.#status}`;
   }
 
-  /**
-   * @param {number} nowSec
-   * @return {boolean}
-   */
-  isImportant(nowSec) {
+  isImportant(nowSec: number): boolean {
     return this.#isUrgentOrImportant(NOTIFICATION_IMPORTANT, nowSec);
   }
 
-  /**
-   * @param {number} nowSec
-   * @return {boolean}
-   */
-  isUrgent(nowSec) {
+  isUrgent(nowSec: number): boolean {
     return this.#isUrgentOrImportant(NOTIFICATION_URGENT, nowSec);
   }
 
-  /**
-   * @return {Object}
-   */
-  getItem() {
+  getItem(): CalendarApiItem {
     return this.#item;
   }
 
-  /**
-   * @return {string}
-   */
-  getCalendarId() {
+  getCalendarId(): string {
     return this.#calendarId;
   }
 
-  /**
-   * @param {number} sec
-   * @param {number} nowSec
-   * @return {boolean}
-   */
-  #isUrgentOrImportant(sec, nowSec) {
+  #isUrgentOrImportant(sec: number, nowSec: number): boolean {
     const diff = nowSec - this.#startTimeSec;
 
     return !this.fullDayEvent() &&
@@ -128,21 +100,13 @@ export class CalendarEntry {
        -sec <= diff && diff < sec;
   }
 
-  /**
-   * @param {number} nowSec
-   * @return {boolean}
-   */
-  isExpired(nowSec) {
+  isExpired(nowSec: number): boolean {
     return this.fullDayEvent() ?
        nowSec > this.#endTimeSec :
        (nowSec - this.#startTimeSec) >= EXPIRATION_TIMEOUT;
   }
 
-  /**
-   * @param {number} beforeSec
-   * @return {boolean}
-   */
-  isBefore(beforeSec) {
+  isBefore(beforeSec: number): boolean {
     return this.#startTimeSec < beforeSec;
   }
 
@@ -152,7 +116,7 @@ export class CalendarEntry {
    * @param {number} nowSec
    * @return {number}
    */
-  nextUpdateTs(nowSec) {
+  nextUpdateTs(nowSec: number): number {
     // adding all the important dates to array and selecting the first one that is not in the past.
     // The value of `startTimeSec + EXPIRATION_TIMEOUT` might be after `endTimeSec` but it is not important
     // as the endTimeSec counts for the full day events only and in that case it won't be later.
@@ -166,61 +130,36 @@ export class CalendarEntry {
     ].find((el) => el > nowSec) || EPOCH_FUTURE;
   }
 
-  /**
-   * @return {string}
-   */
-  title() {
+  title(): string {
     return this.#title;
   }
 
-  /**
-   * @return {string}
-   */
-  location() {
+  location(): string {
     return this.#location;
   }
 
 
-  /**
-   * @return {string}
-   */
-  startTime() {
+  startTime(): string {
     return this.#startTime.toLocaleTimeString([], {timeStyle: 'short'});
   }
 
-  /**
-   * @return {string}
-   */
-  endTime() {
+  endTime(): string {
     return this.#endTime.toLocaleTimeString([], {timeStyle: 'short'});
   }
 
-  /**
-   * @return {string}
-   */
-  htmlLink() {
+  htmlLink(): string {
     return this.#htmlLink;
   }
 
-  /**
-   * @return {'accepted'|'maybe'|'rejected'|'suppressed'}
-   */
-  status() {
+  status(): EventStatus {
     return this.#status;
   }
 
-  /**
-   * @return {boolean}
-   */
-  fullDayEvent() {
+  fullDayEvent(): boolean {
     return (this.#endTimeSec - this.#startTimeSec) % 86400 === 0;
   }
 
-  /**
-   * @param {Object} item
-   * @return {'accepted'|'maybe'|'rejected'|'suppressed'}
-   */
-  static getItemStatus(item) {
+  static getItemStatus(item: CalendarApiItem): EventStatus {
     if (item.eventType === 'outOfOffice' || item.eventType === 'workingLocation') {
       return 'suppressed';
     } else if (item.creator?.self) {
@@ -230,11 +169,7 @@ export class CalendarEntry {
     }
   }
 
-  /**
-   * @param {string} status
-   * @return {'accepted'|'maybe'|'rejected'}
-   */
-  static #responseStatusToInternal(status) {
+  static #responseStatusToInternal(status?: 'accepted' | 'declined' | 'needsAction' | 'tentative'): 'accepted' | 'maybe' | 'rejected' {
     switch (status) {
       case 'accepted':
         return 'accepted';

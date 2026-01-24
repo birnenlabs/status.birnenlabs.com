@@ -1,14 +1,8 @@
-import {ScheduledModuleInterface} from '/pwa/status/js/modules/interface.js';
-
-/**
- * @typedef {import("../interface.js").RefreshResult} RefreshResult
- * @typedef {import("../interface.js").DefaultConfig} DefaultConfig
- */
+import {CustomCss, DefaultConfig, RefreshResult, ScheduledModuleInterface} from '../interface';
 
 const DEFAULT_RAIN_COLOR = '#33ccff';
 
-/** @type {DefaultConfig} */
-const CONFIG = {
+const CONFIG: DefaultConfig = {
   version: 0,
   mergeStrategy: 'DEFAULT_WITH_STORED_EXCLUSIVE',
   help: 'Using open-meteo.com data. Lat&long can be found here: https://open-meteo.com/en/docs.',
@@ -28,15 +22,28 @@ const CONFIG = {
   },
 };
 
+interface OpenMeteoResponse {
+  error?: boolean;
+  reason?: string;
+  current: {
+    temperature_2m: number;
+    relative_humidity_2m: number;
+    wind_speed_10m: number;
+    precipitation: number;
+  };
+  current_units: {
+    temperature_2m: string;
+    relative_humidity_2m: string;
+    wind_speed_10m: string;
+  }
+}
+
 /**
  * Implements ScheduledModuleInterface
  */
 export class OpenMeteoModule extends ScheduledModuleInterface {
-  /** @type {string|undefined} */
-  #url;
-
-  /** @type {string|undefined} */
-  #windyUrl;
+  #url?: string;
+  #windyUrl?: string;
 
   /**
    * Constructor
@@ -49,7 +56,7 @@ export class OpenMeteoModule extends ScheduledModuleInterface {
    * @param {boolean} forced
    * @return {Promise<RefreshResult>}
    */
-  refresh(forced) {
+  refresh(forced: boolean): Promise<RefreshResult> {
     if (this.#url) {
       const consoleLog = `OpenMeteoModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`;
       console.time(consoleLog);
@@ -57,13 +64,13 @@ export class OpenMeteoModule extends ScheduledModuleInterface {
 
       return fetch(this.#url)
           .then((response) => response.json())
-          .then((jsonResponse) => {
+          .then((jsonResponse: OpenMeteoResponse) => {
             if (jsonResponse.error) {
               throw new Error(jsonResponse.reason);
             }
             return jsonResponse;
           })
-          .then((jsonResponse) => ({
+          .then((jsonResponse): RefreshResult => ({
             items: [{
               value: jsonResponse.current.temperature_2m + jsonResponse.current_units.temperature_2m,
               extendedValue: [
@@ -81,11 +88,7 @@ export class OpenMeteoModule extends ScheduledModuleInterface {
     }
   }
 
-  /**
-   * @param {string} rainColor
-   * @return {Object}
-   */
-  static #createCss(rainColor) {
+  static #createCss(rainColor: string): CustomCss[] {
     return [
       {
         className: 'rain',
@@ -94,17 +97,11 @@ export class OpenMeteoModule extends ScheduledModuleInterface {
     ];
   }
 
-  /**
-   * @return {DefaultConfig}
-   */
-  getDefaultConfig() {
+  getDefaultConfig(): DefaultConfig {
     return CONFIG;
   }
 
-  /**
-   * @param {Object<string, string>} config
-   */
-  setConfig(config) {
+  setConfig(config: Record<string, string>): void {
     this.#url = 'https://api.open-meteo.com/v1/forecast?' +
      `latitude=${config.latitude}&` +
      `longitude=${config.longitude}&` +

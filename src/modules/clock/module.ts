@@ -1,57 +1,39 @@
-import {ScheduledModuleInterface} from '/pwa/status/js/modules/interface.js';
+import { DefaultConfig, RefreshResult, ScheduledModuleInterface } from '../interface';
 
-/**
- * @typedef {import("../interface.js").RefreshResult} RefreshResult
- * @typedef {import("../interface.js").DefaultConfig} DefaultConfig
- */
+interface Timezone {
+  label: string;
+  format: Intl.DateTimeFormatOptions;
+}
 
 /**
  * Implements ScheduledModuleInterface
  */
 export class ClockModule extends ScheduledModuleInterface {
-  /**
-   * @typedef {Object} Timezone
-   * @property {string} label
-   * @property {Intl.DateTimeFormatOptions} format
-   */
+  #timezones: Timezone[] = [];
 
-  /** @type {Timezone[]} */
-  #timezones;
-
-  /**
-   * constructor
-   */
   constructor() {
     super(0);
-    this.#timezones = [];
   }
 
-  /**
-   * @param {boolean} forced
-   * @return {RefreshResult}
-   */
-  refresh(forced) {
+  refresh(forced: boolean): RefreshResult {
     const now = new Date();
-    const value = now.toLocaleTimeString([], {timeStyle: 'medium'});
-    let extendedValue = undefined;
+    const value = now.toLocaleTimeString([], { timeStyle: 'medium' });
+    let extendedValue: string[] | undefined;
 
-    if (forced || now.getSeconds() == 0) {
+    if (forced || now.getSeconds() === 0) {
       // Update other timezones too.
-      extendedValue = this.#timezones.map((tz) => tz.label + ': ' + this.#timezoneOrError(now, tz.format));
+      extendedValue = this.#timezones.map((tz) => `${tz.label}: ${this.#timezoneOrError(now, tz.format)}`);
     }
 
     return {
       items: [{
         value,
-        ...extendedValue && {extendedValue},
+        ...(extendedValue && { extendedValue }),
       }],
     };
   }
 
-  /**
-   * @return {DefaultConfig}
-   */
-  getDefaultConfig() {
+  getDefaultConfig(): DefaultConfig {
     return {
       version: 0,
       mergeStrategy: 'STORED_OR_DEFAULT',
@@ -73,24 +55,20 @@ export class ClockModule extends ScheduledModuleInterface {
     };
   }
 
-  /**
-   * @param {Object<string, string>} config
-   */
-  setConfig(config) {
+  setConfig(config: Record<string, string>): void {
     this.#timezones = Object.entries(config).map(
-        ([label, timeZone]) => ({label, format: {timeStyle: 'short', timeZone}}));
+      ([label, timeZone]) => ({ label, format: { timeStyle: 'short', timeZone } })
+    );
   }
 
-  /**
-   * @param {Date} date
-   * @param {Intl.DateTimeFormatOptions} dateTimeFormatOptions
-   * @return {string}
-   */
-  #timezoneOrError(date, dateTimeFormatOptions) {
+  #timezoneOrError(date: Date, dateTimeFormatOptions: Intl.DateTimeFormatOptions): string {
     try {
       return date.toLocaleTimeString([], dateTimeFormatOptions);
     } catch (err) {
-      return err.message;
+      if (err instanceof Error) {
+        return err.message;
+      }
+      return String(err);
     }
   }
 }
