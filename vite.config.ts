@@ -10,4 +10,7 @@ export default defineConfig({
       },
     },
   },
+  esbuild: {
+    keepNames: true, // Need to keep names for modules loader to work.
+  },
 });
