@@ -35,7 +35,7 @@ interface OpenMeteoResponse {
     temperature_2m: string;
     relative_humidity_2m: string;
     wind_speed_10m: string;
-  }
+  };
 }
 
 /**
@@ -63,26 +63,30 @@ export class OpenMeteoModule extends ScheduledModuleInterface {
       console.groupCollapsed(consoleLog);
 
       return fetch(this.#url)
-          .then((response) => response.json())
-          .then((jsonResponse: OpenMeteoResponse) => {
-            if (jsonResponse.error) {
-              throw new Error(jsonResponse.reason);
-            }
-            return jsonResponse;
-          })
-          .then((jsonResponse): RefreshResult => ({
-            items: [{
-              value: jsonResponse.current.temperature_2m + jsonResponse.current_units.temperature_2m,
-              extendedValue: [
-                jsonResponse.current.relative_humidity_2m + jsonResponse.current_units.relative_humidity_2m,
-                jsonResponse.current.wind_speed_10m + jsonResponse.current_units.wind_speed_10m,
-              ],
-              href: this.#windyUrl,
-              classNames: jsonResponse.current.precipitation > 0 ? ['rain'] : [],
-            }],
-          }))
-          .finally(() => console.groupEnd())
-          .finally(() => console.timeEnd(consoleLog));
+        .then((response) => response.json())
+        .then((jsonResponse: OpenMeteoResponse) => {
+          if (jsonResponse.error) {
+            throw new Error(jsonResponse.reason);
+          }
+          return jsonResponse;
+        })
+        .then(
+          (jsonResponse): RefreshResult => ({
+            items: [
+              {
+                value: jsonResponse.current.temperature_2m + jsonResponse.current_units.temperature_2m,
+                extendedValue: [
+                  jsonResponse.current.relative_humidity_2m + jsonResponse.current_units.relative_humidity_2m,
+                  jsonResponse.current.wind_speed_10m + jsonResponse.current_units.wind_speed_10m,
+                ],
+                href: this.#windyUrl,
+                classNames: jsonResponse.current.precipitation > 0 ? ['rain'] : [],
+              },
+            ],
+          }),
+        )
+        .finally(() => console.groupEnd())
+        .finally(() => console.timeEnd(consoleLog));
     } else {
       return Promise.reject(new Error('URL not set.'));
     }
@@ -102,12 +106,13 @@ export class OpenMeteoModule extends ScheduledModuleInterface {
   }
 
   setConfig(config: Record<string, string>): void {
-    this.#url = 'https://api.open-meteo.com/v1/forecast?' +
-     `latitude=${config.latitude}&` +
-     `longitude=${config.longitude}&` +
-     'current=temperature_2m,wind_speed_10m,relative_humidity_2m,precipitation&' +
-     `temperature_unit=${config.temperatureUnit}&` +
-     `wind_speed_unit=${config.windSpeedUnit}`;
+    this.#url =
+      'https://api.open-meteo.com/v1/forecast?' +
+      `latitude=${config.latitude}&` +
+      `longitude=${config.longitude}&` +
+      'current=temperature_2m,wind_speed_10m,relative_humidity_2m,precipitation&' +
+      `temperature_unit=${config.temperatureUnit}&` +
+      `wind_speed_unit=${config.windSpeedUnit}`;
     this.#windyUrl = `https://www.windy.com/?rain,${config.latitude},${config.longitude},7,i:temp`;
     this.css = OpenMeteoModule.#createCss(config.rainColor);
   }

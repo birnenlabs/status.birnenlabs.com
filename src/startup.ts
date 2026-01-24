@@ -20,7 +20,6 @@ async function onPageLoad(): Promise<void> {
   }
 }
 
-
 /**
  * This is a hack around the min height - even in the collapsed version window cannot be smaller than some
  * amount of pixels. If it is moved off screen it might happen that part of it is not visible.
@@ -28,13 +27,11 @@ async function onPageLoad(): Promise<void> {
  */
 function calculateVisibleArea(): void {
   const screen = window.screen as any;
-  const areaHeight =
-       Math.min(
-           Math.min(
-               (screen.availHeight || screen.height) - window.screenTop + (screen.availTop || 0),
-               window.innerHeight),
-           // Limit max height to 60px
-           60);
+  const areaHeight = Math.min(
+    Math.min((screen.availHeight || screen.height) - window.screenTop + (screen.availTop || 0), window.innerHeight),
+    // Limit max height to 60px
+    60,
+  );
   const el = document.getElementById('main-container');
   if (el instanceof HTMLDivElement) {
     // main container will have the same height as visible area

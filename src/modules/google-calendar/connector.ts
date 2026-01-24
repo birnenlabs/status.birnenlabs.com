@@ -23,28 +23,38 @@ export class CalendarConnector {
   }
 
   syncWithCalendar(items: CalendarApiItem[], destCalendarId: string): Promise<any> {
-    return this.#oAuth.getAccessToken()
-        .then((accessToken) => this.#sendImportRequests(items, destCalendarId, accessToken).then((itemIds) => this.#removeItemsFromSynced(itemIds, destCalendarId, accessToken)));
+    return this.#oAuth
+      .getAccessToken()
+      .then((accessToken) =>
+        this.#sendImportRequests(items, destCalendarId, accessToken).then((itemIds) =>
+          this.#removeItemsFromSynced(itemIds, destCalendarId, accessToken),
+        ),
+      );
   }
 
   #retrieveDataWithRetry(calendarId: string, isItSecondTry = false): Promise<CalendarResult> {
     const consoleTimeId = `CalendarControllerRetriever.retrieveDataWithRetry ${new Date().toLocaleTimeString([], {timeStyle: 'short'})} calendarId=${calendarId} isItSecondTry=${isItSecondTry}`;
     console.time(consoleTimeId);
 
-    return this.#oAuth.getAccessToken(/* use isItSecondTry flag to force refresh on second try*/ isItSecondTry)
+    return (
+      this.#oAuth
+        .getAccessToken(/* use isItSecondTry flag to force refresh on second try*/ isItSecondTry)
         // Using '0' as minus days to properly synchronize daily recurring events.
-    // If it was set to 1, we would take the daily event from yesterday and only first recurring event
-    // instance is synchronized.
+        // If it was set to 1, we would take the daily event from yesterday and only first recurring event
+        // instance is synchronized.
         .then((accessToken) => this.#fetchEvents(accessToken, 0, 1, calendarId))
         .then((response) =>
-          (response.status == 200) ?
-             response.json().then((json) => new CalendarResult(json, calendarId)) :
-             (isItSecondTry ?
-                response.text().then((text) => new CalendarResult({} as CalendarApiResponse, calendarId, 'Error: ' + text)) :
-                this.#retrieveDataWithRetry(calendarId, true)))
-        .finally(() => console.timeEnd(consoleTimeId));
+          response.status == 200
+            ? response.json().then((json) => new CalendarResult(json, calendarId))
+            : isItSecondTry
+              ? response
+                  .text()
+                  .then((text) => new CalendarResult({} as CalendarApiResponse, calendarId, 'Error: ' + text))
+              : this.#retrieveDataWithRetry(calendarId, true),
+        )
+        .finally(() => console.timeEnd(consoleTimeId))
+    );
   }
-
 
   #fetchEvents(accessToken: string, minusDays: number, plusDays: number, calendarName: string): Promise<Response> {
     const cutOffStart = new Date();
@@ -61,7 +71,11 @@ export class CalendarConnector {
     url.searchParams.set('orderBy', 'startTime');
     url.searchParams.set('timeMin', cutOffStart.toISOString());
     url.searchParams.set('timeMax', cutOffEnd.toISOString());
-    const params: RequestInit = {method: 'GET', mode: 'cors', headers: {'Authorization': `Bearer ${accessToken}`}};
+    const params: RequestInit = {
+      method: 'GET',
+      mode: 'cors',
+      headers: {Authorization: `Bearer ${accessToken}`},
+    };
     return fetch(url, params);
   }
 
@@ -75,8 +89,14 @@ export class CalendarConnector {
     const itemsToAdd: Partial<CalendarApiItem>[] = [];
 
     for (const item of items
-        .filter((item) => CalendarEntry.getItemStatus(item) === 'accepted')
-        .map((item) => ({iCalUID: (item as any).iCalUID.replace(/_R[0-9]{8}T[0-9]{6}/, ''), start: item.start, end: item.end, location: item.location, summary: item.summary}))) {
+      .filter((item) => CalendarEntry.getItemStatus(item) === 'accepted')
+      .map((item) => ({
+        iCalUID: (item as any).iCalUID.replace(/_R[0-9]{8}T[0-9]{6}/, ''),
+        start: item.start,
+        end: item.end,
+        location: item.location,
+        summary: item.summary,
+      }))) {
       // Recurring items will have the same id after the '_R...' substring is replaced.
       // Let's add only the first instance.
       if (itemIds.has(item.iCalUID)) {
@@ -88,32 +108,48 @@ export class CalendarConnector {
       }
     }
 
-    return Promise.all(itemsToAdd
-        .map((data) => (
-          {method: 'POST', mode: 'cors', body: JSON.stringify(data), headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}`}}
-        ))
-        .map((request) => fetch(url, request as RequestInit)))
-        .then(() => itemIds);
+    return Promise.all(
+      itemsToAdd
+        .map((data) => ({
+          method: 'POST',
+          mode: 'cors',
+          body: JSON.stringify(data),
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }))
+        .map((request) => fetch(url, request as RequestInit)),
+    ).then(() => itemIds);
   }
 
   #removeItemsFromSynced(toKeep: Set<string>, destCalendarId: string, accessToken: string): Promise<any> {
     return this.#fetchEvents(accessToken, 180, 180, destCalendarId)
-        .then((response) => (response.status == 200) ? response.json() as Promise<CalendarApiResponse> : undefined)
-        .then((json) => json!.items.filter((item) => !toKeep.has((item as any).iCalUID)))
-        .then((items) => promiseLog(`will remove ${items.length} items`, items))
-        .then((items) => this.#sendDeleteRequests(items, destCalendarId, accessToken));
+      .then((response) => (response.status == 200 ? (response.json() as Promise<CalendarApiResponse>) : undefined))
+      .then((json) => json!.items.filter((item) => !toKeep.has((item as any).iCalUID)))
+      .then((items) => promiseLog(`will remove ${items.length} items`, items))
+      .then((items) => this.#sendDeleteRequests(items, destCalendarId, accessToken));
   }
 
   /**
    * Will return all the itemIds that were added.
    */
   #sendDeleteRequests(items: CalendarApiItem[], destCalendarId: string, accessToken: string): Promise<any> {
-    const params: RequestInit = {method: 'DELETE', mode: 'cors', headers: {'Authorization': `Bearer ${accessToken}`}};
+    const params: RequestInit = {
+      method: 'DELETE',
+      mode: 'cors',
+      headers: {Authorization: `Bearer ${accessToken}`},
+    };
 
     items.forEach((item) => console.log('removing', item));
-    return Promise.all(items
-        .map((item) => new URL(`https://www.googleapis.com/calendar/v3/calendars/${destCalendarId}/events/${(item as any).id}`))
-        .map((url) => fetch(url, params)));
+    return Promise.all(
+      items
+        .map(
+          (item) =>
+            new URL(`https://www.googleapis.com/calendar/v3/calendars/${destCalendarId}/events/${(item as any).id}`),
+        )
+        .map((url) => fetch(url, params)),
+    );
   }
 }
 

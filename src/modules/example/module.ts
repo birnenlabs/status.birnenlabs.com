@@ -1,10 +1,4 @@
-import {
-  CustomCss,
-  DefaultConfig,
-  PushModuleInterface,
-  RefreshResult,
-  ScheduledModuleInterface
-} from '../interface';
+import {CustomCss, DefaultConfig, PushModuleInterface, RefreshResult, ScheduledModuleInterface} from '../interface';
 
 const CSS: CustomCss[] = [
   {
@@ -19,7 +13,8 @@ const CONFIG: DefaultConfig = {
   help: 'Help text to be printed on the settings page above the configuration.',
   helpTemplate: {
     config: 'help text per template parameter',
-    something_else: 'note that the helpTemplate keys are not compared to the template keys and any string might be used',
+    something_else:
+      'note that the helpTemplate keys are not compared to the template keys and any string might be used',
   },
   template: {
     config: 'some value',
@@ -45,16 +40,17 @@ export class ExampleScheduledModule extends ScheduledModuleInterface {
     console.time(consoleLog);
     console.groupCollapsed(consoleLog);
 
-    return Promise.resolve(
-        ({
-          items: [{
-            value: 'Hello. I am scheduled module, calls count: ' + this.#counter++,
-            extendedValue: ['I have more data'],
-            classNames: ['some-class'],
-          }],
-        }))
-        .finally(() => console.groupEnd())
-        .finally(() => console.timeEnd(consoleLog));
+    return Promise.resolve({
+      items: [
+        {
+          value: 'Hello. I am scheduled module, calls count: ' + this.#counter++,
+          extendedValue: ['I have more data'],
+          classNames: ['some-class'],
+        },
+      ],
+    })
+      .finally(() => console.groupEnd())
+      .finally(() => console.timeEnd(consoleLog));
   }
 
   getDefaultConfig(): DefaultConfig {
@@ -78,11 +74,17 @@ export class ExamplePushModule extends PushModuleInterface {
   constructor() {
     super([], CSS);
 
-    setInterval(() => this._pushRefresh([{
-      value: 'Hello. I am push module, push count: ' + this.#counter++,
-      extendedValue: ['I have more data'],
-      classNames: ['some-class'],
-    }]), 2000);
+    setInterval(
+      () =>
+        this._pushRefresh([
+          {
+            value: 'Hello. I am push module, push count: ' + this.#counter++,
+            extendedValue: ['I have more data'],
+            classNames: ['some-class'],
+          },
+        ]),
+      2000,
+    );
   }
 
   getDefaultConfig(): DefaultConfig {

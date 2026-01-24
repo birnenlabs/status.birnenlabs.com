@@ -4,7 +4,7 @@ import {
   PushModuleInterface,
   ScheduledModuleInterface,
   RefreshResult,
-  DefaultConfig
+  DefaultConfig,
 } from './interface.js';
 
 // Actual modules
@@ -39,7 +39,7 @@ export const MODULES: ModuleConstructor[] = [
 
 export function loadModules(): (PushModuleInterface | ScheduledModuleInterface)[] {
   console.group('Loading modules');
-  const modulesMap = new Map<string, ModuleConstructor>(MODULES.map((m) => ([m.name, m])));
+  const modulesMap = new Map<string, ModuleConstructor>(MODULES.map((m) => [m.name, m]));
 
   const moduleNamesMap = new Map<string, number>();
 
@@ -49,7 +49,7 @@ export function loadModules(): (PushModuleInterface | ScheduledModuleInterface)[
     let newModule: PushModuleInterface | ScheduledModuleInterface;
     if (modulesMap.has(moduleName)) {
       const M = modulesMap.get(moduleName)!;
-      newModule = new M() as (PushModuleInterface | ScheduledModuleInterface);
+      newModule = new M() as PushModuleInterface | ScheduledModuleInterface;
     } else {
       const err = new Error(`Module ${moduleName} not found.`);
       console.warn(err);
@@ -80,19 +80,21 @@ export function loadCss(modules: ModuleInterface[]): string {
     for (const css of module.css) {
       if (REGEXP_CSS_NAME.test(css.className)) {
         const value = Object.entries(css)
-            .filter((entry): entry is [string, string] =>
-                entry[0] !== 'className' &&
-                !!entry[1] &&
-                REGEXP_CSS_PROPERTY.test(entry[0]) &&
-                REGEXP_CSS_PROPERTY_VALUE.test(entry[1])
-            )
-            .map((entry) => `\t${entry[0].replace(/[A-Z]/g, (m) => '-' + m.toLowerCase())}: ${entry[1]};`)
-            .join('\n');
+          .filter(
+            (entry): entry is [string, string] =>
+              entry[0] !== 'className' &&
+              !!entry[1] &&
+              REGEXP_CSS_PROPERTY.test(entry[0]) &&
+              REGEXP_CSS_PROPERTY_VALUE.test(entry[1]),
+          )
+          .map((entry) => `\t${entry[0].replace(/[A-Z]/g, (m) => '-' + m.toLowerCase())}: ${entry[1]};`)
+          .join('\n');
 
-        result += css.className.split(',')
+        result +=
+          css.className
+            .split(',')
             .map((className) => '.' + generateCssName(module.name, className))
-            .join('') +
-          ` {\n${value}\n}\n`;
+            .join('') + ` {\n${value}\n}\n`;
       } else {
         console.warn(`Ignoring invalid class name: ${css.className}. Valid regexp: ${REGEXP_CSS_NAME}`);
       }
@@ -125,10 +127,14 @@ class ErrorModule extends ScheduledModuleInterface {
   }
 
   getDefaultConfig(): DefaultConfig {
-    return {version: 0, mergeStrategy: 'DEFAULT_WITH_STORED_EXCLUSIVE', template: {}};
+    return {
+      version: 0,
+      mergeStrategy: 'DEFAULT_WITH_STORED_EXCLUSIVE',
+      template: {},
+    };
   }
 
   setConfig(_: Record<string, string>): void {
-      // empty
+    // empty
   }
 }

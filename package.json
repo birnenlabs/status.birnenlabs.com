@@ -6,14 +6,16 @@
     "start": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "update": "npx npm-check-updates"
+    "update": "ncu -u && npm install",
+    "format": "prettier --write \"{css,src}/**/*.{ts,tsx,html,css}\" index.html settings.html"
   },
   "devDependencies": {
-    "firebase": "^11.10.0",
+    "npm-check-updates": "^19.2.0",
+    "prettier": "^3.8.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.0"
   },
   "dependencies": {
-    "npm-check-updates": "^19.2.0"
+    "firebase": "^11.10.0"
   }
 }

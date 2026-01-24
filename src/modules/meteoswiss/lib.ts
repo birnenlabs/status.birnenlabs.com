@@ -1,4 +1,4 @@
-import { combine } from '../../lib/promise';
+import {combine} from '../../lib/promise';
 
 interface Geometry {
   coordinates: [number, number];
@@ -20,7 +20,6 @@ interface Feature {
 interface JsonResponse {
   features: Feature[];
 }
-
 
 /**
  * Class that gets data from meteo swiss stations.
@@ -65,56 +64,85 @@ export class MeteoSwissLib {
   }
 
   getTemperature(): Promise<string> {
-    return this.#fetchAndGetAverage('https://data.geo.admin.ch/ch.meteoschweiz.messwerte-lufttemperatur-10min/ch.meteoschweiz.messwerte-lufttemperatur-10min_en.json');
+    return this.#fetchAndGetAverage(
+      'https://data.geo.admin.ch/ch.meteoschweiz.messwerte-lufttemperatur-10min/ch.meteoschweiz.messwerte-lufttemperatur-10min_en.json',
+    );
   }
 
   getHumidity(): Promise<string> {
-    return this.#fetchAndGetAverage('https://data.geo.admin.ch/ch.meteoschweiz.messwerte-luftfeuchtigkeit-10min/ch.meteoschweiz.messwerte-luftfeuchtigkeit-10min_en.json');
+    return this.#fetchAndGetAverage(
+      'https://data.geo.admin.ch/ch.meteoschweiz.messwerte-luftfeuchtigkeit-10min/ch.meteoschweiz.messwerte-luftfeuchtigkeit-10min_en.json',
+    );
   }
 
   getWind(): Promise<string> {
-    return this.#fetchAndGetAverage('https://data.geo.admin.ch/ch.meteoschweiz.messwerte-windgeschwindigkeit-kmh-10min/ch.meteoschweiz.messwerte-windgeschwindigkeit-kmh-10min_en.json');
+    return this.#fetchAndGetAverage(
+      'https://data.geo.admin.ch/ch.meteoschweiz.messwerte-windgeschwindigkeit-kmh-10min/ch.meteoschweiz.messwerte-windgeschwindigkeit-kmh-10min_en.json',
+    );
   }
 
   isRaining(): Promise<boolean> {
-    const url = 'https://data.geo.admin.ch/ch.meteoschweiz.messwerte-niederschlag-10min/ch.meteoschweiz.messwerte-niederschlag-10min_en.json';
-    const featuresPromise = this.#fetchFeatures(url)
-      .then((features) => features
+    const url =
+      'https://data.geo.admin.ch/ch.meteoschweiz.messwerte-niederschlag-10min/ch.meteoschweiz.messwerte-niederschlag-10min_en.json';
+    const featuresPromise = this.#fetchFeatures(url).then((features) =>
+      features
         .filter((feature) => this.#filterAltitude(feature))
         .filter((feature) => this.#filterInactive(feature))
-        .filter((feature) => this.#filterLocationRain(feature)));
+        .filter((feature) => this.#filterLocationRain(feature)),
+    );
 
-    const resultPromise: Promise<boolean> = featuresPromise.then((features) => features.some((f) => f.properties.value > 0));
+    const resultPromise: Promise<boolean> = featuresPromise.then((features) =>
+      features.some((f) => f.properties.value > 0),
+    );
 
     return combine(featuresPromise, resultPromise, (features, result) => {
       console.groupCollapsed('IsRaining: ' + result);
-      features.forEach((f) => console.debug('%f%s\t%s [%fm]', f.properties.value, f.properties.unit, f.properties.station_name, f.properties.altitude));
+      features.forEach((f) =>
+        console.debug(
+          '%f%s\t%s [%fm]',
+          f.properties.value,
+          f.properties.unit,
+          f.properties.station_name,
+          f.properties.altitude,
+        ),
+      );
       console.groupEnd();
       return result;
     });
   }
 
   #fetchAndGetAverage(url: string): Promise<string> {
-    const featuresPromise: Promise<Feature[]> = this.#fetchFeatures(url)
-      .then((features) => features
+    const featuresPromise: Promise<Feature[]> = this.#fetchFeatures(url).then((features) =>
+      features
         .filter((feature) => this.#filterAltitude(feature))
         .filter((feature) => this.#filterInactive(feature))
-        .filter((feature) => this.#filterLocation(feature)));
+        .filter((feature) => this.#filterLocation(feature)),
+    );
 
-    const resultPromise: Promise<string> = featuresPromise.then(
-      (features) => features.length > 0 ?
-        (features
-          .map((f) => f.properties.value)
-          .reduce((partialSum, a) => partialSum + a, 0) / features.length)
-          .toFixed(1) :
-        '0');
+    const resultPromise: Promise<string> = featuresPromise.then((features) =>
+      features.length > 0
+        ? (
+            features.map((f) => f.properties.value).reduce((partialSum, a) => partialSum + a, 0) / features.length
+          ).toFixed(1)
+        : '0',
+    );
 
     const unitPromise: Promise<string> = featuresPromise.then(
-      (features) => features.find((f) => f.properties.unit)?.properties.unit || '');
+      (features) => features.find((f) => f.properties.unit)?.properties.unit || '',
+    );
 
     return combine(featuresPromise, resultPromise, unitPromise, (features, result, unit) => {
       console.groupCollapsed(`GetAverage: ${result}${unit}`);
-      features.forEach((f) => console.debug('%f%s\t%s [%fm]', f.properties.value, f.properties.unit, f.properties.station_name, f.properties.altitude)); console.groupEnd();
+      features.forEach((f) =>
+        console.debug(
+          '%f%s\t%s [%fm]',
+          f.properties.value,
+          f.properties.unit,
+          f.properties.station_name,
+          f.properties.altitude,
+        ),
+      );
+      console.groupEnd();
       return `${result}${unit}`;
     });
   }
@@ -129,9 +157,11 @@ export class MeteoSwissLib {
   }
 
   #filterInactive(feature: Feature): boolean {
-    return feature.properties.reference_ts != null &&
+    return (
+      feature.properties.reference_ts != null &&
       feature.properties.reference_ts !== 'null' &&
-      feature.properties.reference_ts !== '-';
+      feature.properties.reference_ts !== '-'
+    );
   }
 
   #filterLocationRain(feature: Feature): boolean {

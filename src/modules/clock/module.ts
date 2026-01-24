@@ -1,4 +1,4 @@
-import { DefaultConfig, RefreshResult, ScheduledModuleInterface } from '../interface';
+import {DefaultConfig, RefreshResult, ScheduledModuleInterface} from '../interface';
 
 interface Timezone {
   label: string;
@@ -17,7 +17,7 @@ export class ClockModule extends ScheduledModuleInterface {
 
   refresh(forced: boolean): RefreshResult {
     const now = new Date();
-    const value = now.toLocaleTimeString([], { timeStyle: 'medium' });
+    const value = now.toLocaleTimeString([], {timeStyle: 'medium'});
     let extendedValue: string[] | undefined;
 
     if (forced || now.getSeconds() === 0) {
@@ -26,10 +26,12 @@ export class ClockModule extends ScheduledModuleInterface {
     }
 
     return {
-      items: [{
-        value,
-        ...(extendedValue && { extendedValue }),
-      }],
+      items: [
+        {
+          value,
+          ...(extendedValue && {extendedValue}),
+        },
+      ],
     };
   }
 
@@ -39,7 +41,8 @@ export class ClockModule extends ScheduledModuleInterface {
       mergeStrategy: 'STORED_OR_DEFAULT',
       help: 'Set timezones that will be displayed on hover - one timezone per line.',
       helpTemplate: {
-        label: '<label> will be displayed before the time, value should be a valid timezone identifier per "tz database". ',
+        label:
+          '<label> will be displayed before the time, value should be a valid timezone identifier per "tz database". ',
       },
       template: {
         lax: 'America/Los_Angeles',
@@ -56,9 +59,10 @@ export class ClockModule extends ScheduledModuleInterface {
   }
 
   setConfig(config: Record<string, string>): void {
-    this.#timezones = Object.entries(config).map(
-      ([label, timeZone]) => ({ label, format: { timeStyle: 'short', timeZone } })
-    );
+    this.#timezones = Object.entries(config).map(([label, timeZone]) => ({
+      label,
+      format: {timeStyle: 'short', timeZone},
+    }));
   }
 
   #timezoneOrError(date: Date, dateTimeFormatOptions: Intl.DateTimeFormatOptions): string {

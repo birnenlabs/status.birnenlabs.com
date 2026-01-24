@@ -37,14 +37,13 @@ class BaseEvent {
    */
   tick(): Promise<any> {
     // Use `new Promise()` to start promise chain even for non promise functions.
-    return new Promise((resolve) => resolve(this.#fn()))
-        .catch((e) => {
-          // Log and rethrow failed task.
-          // Child classes will set the next event run in their finally clauses,
-          // Scheduler will reschedule in case of failure
-          console.error(`${this} failed`, e);
-          throw e;
-        });
+    return new Promise((resolve) => resolve(this.#fn())).catch((e) => {
+      // Log and rethrow failed task.
+      // Child classes will set the next event run in their finally clauses,
+      // Scheduler will reschedule in case of failure
+      console.error(`${this} failed`, e);
+      throw e;
+    });
   }
 }
 
@@ -100,29 +99,33 @@ class ScheduledEvent extends BaseEvent {
     this.#retryDelaySec = Math.min(Math.round(this.#retryDelaySec * 1.659), RETRY_DELAY_MAX_SEC);
     this.#rescheduleCount++;
 
-    console.log(`Rescheduling: ${super.toString()}: retry #${this.#rescheduleCount}, original next run: ${originalNextRunEpochString}, next retry delay sec: ${this.#retryDelaySec}`);
+    console.log(
+      `Rescheduling: ${super.toString()}: retry #${this.#rescheduleCount}, original next run: ${originalNextRunEpochString}, next retry delay sec: ${this.#retryDelaySec}`,
+    );
   }
 
   setNextRunEpochSec(nextRunEpochSec: number): void {
     this.#nextRunEpochSec = nextRunEpochSec;
   }
 
-
   /**
    * Performs function
    */
   tick(): Promise<any> {
-    return super.tick()
+    return (
+      super
+        .tick()
         // Reset retry timer on success
-        .then(() => this.#retryDelaySec = RETRY_DELAY_BASE_SEC)
+        .then(() => (this.#retryDelaySec = RETRY_DELAY_BASE_SEC))
         // Reset reschedule count on success
-        .then(() => this.#rescheduleCount = 0)
+        .then(() => (this.#rescheduleCount = 0))
         // Always set next run (RepeatableEvent will overwrite it in its finally clause)
-        .finally(() => this.setNextRunEpochSec(-1));
+        .finally(() => this.setNextRunEpochSec(-1))
+    );
   }
 
   static compare(e1: ScheduledEvent, e2: ScheduledEvent): number {
-    return (e1.#nextRunEpochSec - e2.#nextRunEpochSec) || e1.id().localeCompare(e2.id());
+    return e1.#nextRunEpochSec - e2.#nextRunEpochSec || e1.id().localeCompare(e2.id());
   }
 }
 
@@ -144,16 +147,19 @@ class RepeatableEvent extends ScheduledEvent {
   }
 
   toString(): string {
-    return super.toString() + `, repeatable every ${this.#intervalSec/60}m`;
+    return super.toString() + `, repeatable every ${this.#intervalSec / 60}m`;
   }
 
   /**
    * Perform function
    */
   tick(): Promise<any> {
-    return super.tick()
+    return (
+      super
+        .tick()
         // Always set the next run.
-        .finally(() => super.setNextRunEpochSec(RepeatableEvent.#calculateNextRunEpochSec(this.#intervalSec)));
+        .finally(() => super.setNextRunEpochSec(RepeatableEvent.#calculateNextRunEpochSec(this.#intervalSec)))
+    );
   }
 
   /**
@@ -182,7 +188,7 @@ class Scheduler {
   static #scheduledEvents: ScheduledEvent[] = [
     // Adding last event to guard the end of an array.
     // There will be no need to check array length on #tick.
-    new ScheduledEvent('__?# internal Scheduler last event #?__', ()=>{}, EPOCH_FUTURE),
+    new ScheduledEvent('__?# internal Scheduler last event #?__', () => {}, EPOCH_FUTURE),
   ];
 
   static {
@@ -203,13 +209,14 @@ class Scheduler {
     }
 
     let tickEventsPromise =
-       // Run #everyTickEvents in parallel
-       Promise.all(
-           Scheduler.#everyTickEvents
-               // Swallow exception here - failed are already logged and #everyTickEvents will be tried at the next tick anyway
-               .map((event) => event.tick().catch(() => {})))
-           // Schedule the next tick in 1 second after all the #everyTickEvents completed.
-           .then(() => setTimeout(Scheduler.#tick, 1000 - (Date.now() % 1000)));
+      // Run #everyTickEvents in parallel
+      Promise.all(
+        Scheduler.#everyTickEvents
+          // Swallow exception here - failed are already logged and #everyTickEvents will be tried at the next tick anyway
+          .map((event) => event.tick().catch(() => {})),
+      )
+        // Schedule the next tick in 1 second after all the #everyTickEvents completed.
+        .then(() => setTimeout(Scheduler.#tick, 1000 - (Date.now() % 1000)));
 
     // Run the remaining eventsToRun in the sequence
     for (const event of eventsToRun) {
@@ -217,10 +224,12 @@ class Scheduler {
       tickEventsPromise = tickEventsPromise.then(() => event.tick().catch(() => event.scheduleForRetry()));
     }
 
-    return tickEventsPromise
+    return (
+      tickEventsPromise
         // Maybe re-add functions from eventsToRun (including events scheduled for retry).
         .then(() => eventsToRun.forEach((event) => event.isScheduled() && Scheduler.add(event)))
-        .catch((e) => console.error(`Unexpected exception in scheduler - this is a bug.`, e));
+        .catch((e) => console.error(`Unexpected exception in scheduler - this is a bug.`, e))
+    );
   }
 
   static add(event: BaseEvent | ScheduledEvent | RepeatableEvent): void {
@@ -257,7 +266,6 @@ class Scheduler {
     }
   }
 }
-
 
 /** Exported class used to hold static constructors of events */
 export class Event {

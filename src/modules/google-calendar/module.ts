@@ -39,29 +39,33 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
 
   refresh(forced: boolean): Promise<RefreshResult> | RefreshResult {
     if (this.#connector) {
-      console.groupCollapsed(`CalendarModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`);
+      console.groupCollapsed(
+        `CalendarModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`,
+      );
       const timeSync = 'CalendarModule.refresh: sync time';
       const timeRender = 'CalendarModule.refresh: retrieve time';
       console.time(timeSync);
       console.time(timeRender);
 
-      const calendarResultPromise: Promise<CalendarResult[]> = Promise.all(this.#sourceCalendars.map((calendarId) => this.#connector!.retrieveData(calendarId)));
+      const calendarResultPromise: Promise<CalendarResult[]> = Promise.all(
+        this.#sourceCalendars.map((calendarId) => this.#connector!.retrieveData(calendarId)),
+      );
 
       const refreshResultPromise: Promise<RefreshResult> = calendarResultPromise
-          .then((results) => this.#createRefreshResult(results, forced))
-          .finally(() => console.timeEnd(timeRender));
+        .then((results) => this.#createRefreshResult(results, forced))
+        .finally(() => console.timeEnd(timeRender));
 
       const syncPromise = calendarResultPromise
-          .then((calendarResult) => this.#maybeSyncCalendar(calendarResult.at(0), forced))
-          .finally(() => console.timeEnd(timeSync));
+        .then((calendarResult) => this.#maybeSyncCalendar(calendarResult.at(0), forced))
+        .finally(() => console.timeEnd(timeSync));
 
       return combine(refreshResultPromise, syncPromise, (refreshResult: RefreshResult) => refreshResult)
-          .catch((err: Error) => {
-            // If error is thrown from this method, it will be rendered. Reset the last render to force it during the next update.
-            this.#lastRenderMillis = 0;
-            throw err;
-          })
-          .finally(() => console.groupEnd());
+        .catch((err: Error) => {
+          // If error is thrown from this method, it will be rendered. Reset the last render to force it during the next update.
+          this.#lastRenderMillis = 0;
+          throw err;
+        })
+        .finally(() => console.groupEnd());
     } else {
       this.#lastRenderMillis = 0;
       return Promise.reject(new Error(this.#errorMessage));
@@ -76,9 +80,13 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
 
     const nowMillis = new Date().getTime();
     if (!forced) {
-      const lastUpdateMillis = Math.max(...calendarResults.map((calendarResult) => calendarResult.getLastUpdateMillis()));
-      if (nowMillis - this.#lastRenderMillis < MAX_INTERVAL_BETWEEN_SYNC_MS &&
-          this.#lastRenderMillis > lastUpdateMillis) {
+      const lastUpdateMillis = Math.max(
+        ...calendarResults.map((calendarResult) => calendarResult.getLastUpdateMillis()),
+      );
+      if (
+        nowMillis - this.#lastRenderMillis < MAX_INTERVAL_BETWEEN_SYNC_MS &&
+        this.#lastRenderMillis > lastUpdateMillis
+      ) {
         console.log(`Skipping render, last rendered at: ${new Date(this.#lastRenderMillis).toLocaleString('sv')}`);
         return {skipHtmlUpdate: true, items: []};
       }
@@ -108,8 +116,10 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
     }
 
     const nowMillis = new Date().getTime();
-    if (nowMillis - this.#lastSyncMillis < MAX_INTERVAL_BETWEEN_SYNC_MS &&
-        this.#lastSyncMillis > calendarResult.getLastUpdateMillis()) {
+    if (
+      nowMillis - this.#lastSyncMillis < MAX_INTERVAL_BETWEEN_SYNC_MS &&
+      this.#lastSyncMillis > calendarResult.getLastUpdateMillis()
+    ) {
       console.log(`Skipping sync, last synced at: ${new Date(this.#lastSyncMillis).toLocaleString('sv')}`);
       return Promise.resolve();
     }
@@ -117,10 +127,10 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
     console.group(`Maybe sync calendar: ${calendarResult}`);
     const calendarItems = calendarResult.getCalendarEntries().map((calendarEntry) => calendarEntry.getItem());
     return this.#connector!.syncWithCalendar(calendarItems, this.#destinationCalendar)
-        .then(() => {
-          this.#lastSyncMillis = nowMillis;
-        })
-        .finally(() => console.groupEnd());
+      .then(() => {
+        this.#lastSyncMillis = nowMillis;
+      })
+      .finally(() => console.groupEnd());
   }
 
   getDefaultConfig(): DefaultConfig {

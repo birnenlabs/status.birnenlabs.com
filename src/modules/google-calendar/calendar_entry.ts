@@ -8,27 +8,26 @@ type EventStatus = 'accepted' | 'maybe' | 'rejected' | 'suppressed';
 
 // This is from google calendar API response
 export interface CalendarApiItem {
-    summary?: string;
-    location?: string;
-    htmlLink?: string;
-    start: {
-        dateTime?: string; // e.g. '2024-03-25T10:00:00+01:00'
-        date?: string; // e.g. '2024-03-26' for all-day events
-    };
-    end: {
-        dateTime?: string;
-        date?: string;
-    };
-    eventType?: 'outOfOffice' | 'workingLocation';
-    creator?: {
-        self?: boolean;
-    };
-    attendees?: {
-        self?: boolean;
-        responseStatus: 'accepted' | 'declined' | 'needsAction' | 'tentative';
-    }[];
+  summary?: string;
+  location?: string;
+  htmlLink?: string;
+  start: {
+    dateTime?: string; // e.g. '2024-03-25T10:00:00+01:00'
+    date?: string; // e.g. '2024-03-26' for all-day events
+  };
+  end: {
+    dateTime?: string;
+    date?: string;
+  };
+  eventType?: 'outOfOffice' | 'workingLocation';
+  creator?: {
+    self?: boolean;
+  };
+  attendees?: {
+    self?: boolean;
+    responseStatus: 'accepted' | 'declined' | 'needsAction' | 'tentative';
+  }[];
 }
-
 
 /**
  * Calendar entry class
@@ -48,9 +47,11 @@ export class CalendarEntry {
   #calendarId: string;
 
   static compare(e1: CalendarEntry, e2: CalendarEntry): number {
-    return (e1.#startTime.getTime() - e2.#startTime.getTime()) ||
+    return (
+      e1.#startTime.getTime() - e2.#startTime.getTime() ||
       e1.#status.localeCompare(e2.#status) ||
-      e1.#title.localeCompare(e2.#title);
+      e1.#title.localeCompare(e2.#title)
+    );
   }
 
   constructor(item: CalendarApiItem, calendarId: string) {
@@ -62,8 +63,8 @@ export class CalendarEntry {
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date#date_time_string_format
     // When the time zone offset is absent, date-only forms are interpreted as a UTC time
     // and date-time forms are interpreted as local time. This is due to a historical spec error.
-    this.#startTime = new Date(item.start.dateTime || (item.start.date + 'T00:00:00'));
-    this.#endTime = new Date(item.end.dateTime || (item.end.date + 'T00:00:00'));
+    this.#startTime = new Date(item.start.dateTime || item.start.date + 'T00:00:00');
+    this.#endTime = new Date(item.end.dateTime || item.end.date + 'T00:00:00');
     this.#startTimeSec = dateToSec(this.#startTime);
     this.#endTimeSec = dateToSec(this.#endTime);
 
@@ -94,16 +95,13 @@ export class CalendarEntry {
   #isUrgentOrImportant(sec: number, nowSec: number): boolean {
     const diff = nowSec - this.#startTimeSec;
 
-    return !this.fullDayEvent() &&
-       this.status() != 'rejected' &&
-       this.status() != 'suppressed' &&
-       -sec <= diff && diff < sec;
+    return (
+      !this.fullDayEvent() && this.status() != 'rejected' && this.status() != 'suppressed' && -sec <= diff && diff < sec
+    );
   }
 
   isExpired(nowSec: number): boolean {
-    return this.fullDayEvent() ?
-       nowSec > this.#endTimeSec :
-       (nowSec - this.#startTimeSec) >= EXPIRATION_TIMEOUT;
+    return this.fullDayEvent() ? nowSec > this.#endTimeSec : nowSec - this.#startTimeSec >= EXPIRATION_TIMEOUT;
   }
 
   isBefore(beforeSec: number): boolean {
@@ -120,14 +118,16 @@ export class CalendarEntry {
     // adding all the important dates to array and selecting the first one that is not in the past.
     // The value of `startTimeSec + EXPIRATION_TIMEOUT` might be after `endTimeSec` but it is not important
     // as the endTimeSec counts for the full day events only and in that case it won't be later.
-    return [
-      this.#startTimeSec - NOTIFICATION_IMPORTANT,
-      this.#startTimeSec - NOTIFICATION_URGENT,
-      this.#startTimeSec + NOTIFICATION_URGENT,
-      this.#startTimeSec + NOTIFICATION_IMPORTANT,
-      this.#startTimeSec + EXPIRATION_TIMEOUT,
-      this.#endTimeSec,
-    ].find((el) => el > nowSec) || EPOCH_FUTURE;
+    return (
+      [
+        this.#startTimeSec - NOTIFICATION_IMPORTANT,
+        this.#startTimeSec - NOTIFICATION_URGENT,
+        this.#startTimeSec + NOTIFICATION_URGENT,
+        this.#startTimeSec + NOTIFICATION_IMPORTANT,
+        this.#startTimeSec + EXPIRATION_TIMEOUT,
+        this.#endTimeSec,
+      ].find((el) => el > nowSec) || EPOCH_FUTURE
+    );
   }
 
   title(): string {
@@ -137,7 +137,6 @@ export class CalendarEntry {
   location(): string {
     return this.#location;
   }
-
 
   startTime(): string {
     return this.#startTime.toLocaleTimeString([], {timeStyle: 'short'});
@@ -169,7 +168,9 @@ export class CalendarEntry {
     }
   }
 
-  static #responseStatusToInternal(status?: 'accepted' | 'declined' | 'needsAction' | 'tentative'): 'accepted' | 'maybe' | 'rejected' {
+  static #responseStatusToInternal(
+    status?: 'accepted' | 'declined' | 'needsAction' | 'tentative',
+  ): 'accepted' | 'maybe' | 'rejected' {
     switch (status) {
       case 'accepted':
         return 'accepted';

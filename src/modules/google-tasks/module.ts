@@ -1,4 +1,3 @@
-
 import {ScheduledModuleInterface, RefreshResult, RefreshResultItem, DefaultConfig} from '../interface';
 import {OAuth} from '../../lib/oauth';
 import {TasksConnector, TaskItem} from './connector';
@@ -33,18 +32,18 @@ export class GoogleTasksModule extends ScheduledModuleInterface {
     midnightToday.setHours(0, 0, 0, 0);
 
     if (this.connector) {
-      console.groupCollapsed(`GoogleTasksModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`);
+      console.groupCollapsed(
+        `GoogleTasksModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`,
+      );
       const timeConsole = 'GoogleTasksModule.refresh';
       console.time(timeConsole);
 
       try {
-        const tasks = await Promise.all(
-            this.listIds.map((listId) => this.connector!.retrieveData(listId)),
-        );
+        const tasks = await Promise.all(this.listIds.map((listId) => this.connector!.retrieveData(listId)));
         const items = tasks
-            .flat()
-            .sort(compareTaskItem)
-            .map((task: TaskItem) => this.taskItemToRefreshResultItem(task, midnightToday));
+          .flat()
+          .sort(compareTaskItem)
+          .map((task: TaskItem) => this.taskItemToRefreshResultItem(task, midnightToday));
         return {items};
       } finally {
         console.groupEnd();
@@ -60,11 +59,7 @@ export class GoogleTasksModule extends ScheduledModuleInterface {
     return {
       value: `□ ${taskItem.title}`,
       href: taskItem.url,
-      classNames: taskItem.dueDate
-        ? taskItem.dueDate < midnightToday
-          ? ['overdue']
-          : ['today']
-        : [],
+      classNames: taskItem.dueDate ? (taskItem.dueDate < midnightToday ? ['overdue'] : ['today']) : [],
     };
   }
 
@@ -89,7 +84,6 @@ const FUTURE_DATE = new Date(2100, 0, 1);
 
 function compareTaskItem(t1: TaskItem, t2: TaskItem): number {
   return (
-    ((t1.dueDate || FUTURE_DATE).getTime() - (t2.dueDate || FUTURE_DATE).getTime()) ||
-    t1.title.localeCompare(t2.title)
+    (t1.dueDate || FUTURE_DATE).getTime() - (t2.dueDate || FUTURE_DATE).getTime() || t1.title.localeCompare(t2.title)
   );
 }

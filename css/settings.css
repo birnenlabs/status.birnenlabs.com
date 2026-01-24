@@ -13,7 +13,7 @@ section {
   padding: 5px;
 }
 
-input[type=button] {
+input[type='button'] {
   background-color: #777;
   border: solid 1px black;
   color: white;
@@ -23,11 +23,11 @@ input[type=button] {
   padding: 5px;
 }
 
-input[type=button]:hover {
+input[type='button']:hover {
   filter: brightness(90%);
 }
 
-input[type="button"]:disabled {
+input[type='button']:disabled {
   cursor: default;
   filter: brightness(90%);
   opacity: 0.2;
@@ -59,12 +59,12 @@ section.module {
   }
 }
 
-input[type=button].module-button {
+input[type='button'].module-button {
   background-color: lightgray;
   margin: 2px;
 }
 
-input[type=button].module-button-active {
+input[type='button'].module-button-active {
   background-color: #777;
 }
 
@@ -81,9 +81,10 @@ input[type=button].module-button-active {
 .config-preview {
   font-family: monospace;
   margin-bottom: 8px;
-} 
+}
 
-.config-preview-key, .config-preview-sep {
+.config-preview-key,
+.config-preview-sep {
   color: gray;
 }
 
@@ -105,7 +106,7 @@ input[type=button].module-button-active {
   padding: 5px;
   position: absolute;
   text-align: center;
-  transition:opacity 0.3s;
+  transition: opacity 0.3s;
   visibility: hidden;
   z-index: 1;
 }
@@ -114,7 +115,6 @@ input[type=button].module-button-active {
   opacity: 1;
   visibility: visible;
 }
-
 
 pre.config-description {
   font-family: sans-serif;

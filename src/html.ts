@@ -1,5 +1,5 @@
-import { ModuleInterface, RefreshResultItem, ELLIPSIS } from './modules/interface';
-import { loadCss, generateCssName } from './modules/loader';
+import {ModuleInterface, RefreshResultItem, ELLIPSIS} from './modules/interface';
+import {loadCss, generateCssName} from './modules/loader';
 
 const BASE_ATT = 'text-base';
 const EXTENSION_ATT = 'text-ext';
@@ -11,7 +11,7 @@ export function init(modules: ModuleInterface[]): void {
   console.log('Initialising base DOM structure.');
   const mainEl = document.getElementById('main-container') as HTMLDivElement;
 
-  modules.forEach(module => {
+  modules.forEach((module) => {
     const el = document.createElement('span');
     el.id = module.name;
     mainEl.appendChild(el);
@@ -46,7 +46,9 @@ function renderItems(moduleName: string, items: RefreshResultItem[]): void {
   const expectedElementsCount = Math.max(2 * items.length - 1, 0);
 
   if (parentEl.childElementCount !== expectedElementsCount) {
-    console.log(`Adjusting DOM: ChildElementCount (${parentEl.childElementCount}) doesn't match items size (${items.length}), expected count with separators: ${expectedElementsCount}`);
+    console.log(
+      `Adjusting DOM: ChildElementCount (${parentEl.childElementCount}) doesn't match items size (${items.length}), expected count with separators: ${expectedElementsCount}`,
+    );
 
     while (parentEl.childElementCount < expectedElementsCount) {
       const childEl = document.createElement('span');

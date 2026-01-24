@@ -54,28 +54,32 @@ export function processOAuthRedirect(): Promise<void> {
     return Promise.reject(new Error(`Url missing param: ${oauthCodeParam}`));
   }
 
-  const params: RequestInit = {method: 'POST', mode: 'cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(s.createRefreshTokenData(code))};
+  const params: RequestInit = {
+    method: 'POST',
+    mode: 'cors',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(s.createRefreshTokenData(code)),
+  };
 
   return fetch(s.getTokenUrl()!, params)
-      .then((response) => {
-        if (response.status != 200) {
-          throw new Error(`Cannot get token: url: ${s.getTokenUrl()}, response: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((json: {refresh_token?: string}) => {
-        if (!json.refresh_token) {
-          throw new Error(`RefreshToken not found in response: ${JSON.stringify(json)}`);
-        }
-        s.setRefreshToken(json.refresh_token);
-        s.save();
-        if (s.getReturnUrl()) {
-          window.location.href = s.getReturnUrl()!;
-        }
-        return;
-      });
+    .then((response) => {
+      if (response.status != 200) {
+        throw new Error(`Cannot get token: url: ${s.getTokenUrl()}, response: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((json: {refresh_token?: string}) => {
+      if (!json.refresh_token) {
+        throw new Error(`RefreshToken not found in response: ${JSON.stringify(json)}`);
+      }
+      s.setRefreshToken(json.refresh_token);
+      s.save();
+      if (s.getReturnUrl()) {
+        window.location.href = s.getReturnUrl()!;
+      }
+      return;
+    });
 }
-
 
 /**
  * OAuth class that will take care of the OAuth flow.
@@ -108,12 +112,26 @@ export class OAuth {
       return Promise.reject(new Error(`Settings not initialised: ${this.#settings}`));
     }
 
-    const params: RequestInit = {method: 'POST', mode: 'cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(accessTokenData)};
+    const params: RequestInit = {
+      method: 'POST',
+      mode: 'cors',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(accessTokenData),
+    };
     return fetch(this.#settings.getTokenUrl()!, params)
-        .then((response) => (response.status == 200) ? response :
-           this.#throwError(`Cannot get access token: url: ${this.#settings.getTokenUrl()}, response: ${response.status}`))
-        .then((response) => response.json())
-        .then((json: {access_token?: string}) => json.access_token ? (this.#accessToken = json.access_token) : this.#throwError(`AccessToken not found in response: ${JSON.stringify(json)}`));
+      .then((response) =>
+        response.status == 200
+          ? response
+          : this.#throwError(
+              `Cannot get access token: url: ${this.#settings.getTokenUrl()}, response: ${response.status}`,
+            ),
+      )
+      .then((response) => response.json())
+      .then((json: {access_token?: string}) =>
+        json.access_token
+          ? (this.#accessToken = json.access_token)
+          : this.#throwError(`AccessToken not found in response: ${JSON.stringify(json)}`),
+      );
   }
 
   #throwError(message: string): never {
@@ -137,7 +155,9 @@ export class OAuthSettings {
 
   constructor(name: string) {
     this.#name = name;
-    this.#data = JSON.parse(localStorage.getItem(name) || 'null') || {type: OAuthSettings.#type};
+    this.#data = JSON.parse(localStorage.getItem(name) || 'null') || {
+      type: OAuthSettings.#type,
+    };
     if (OAuthSettings.#type == this.#data.type) {
       console.log('OAuthSettings created: ' + this);
     } else {
@@ -222,7 +242,6 @@ export class OAuthSettings {
     return !!this.#data.refreshToken;
   }
 
-
   /**
    * Sets client id (e.g. from Google Developer Console)
    */
@@ -281,12 +300,14 @@ export class OAuthSettings {
   }
 
   isInitialised(): boolean {
-    return !!(this.#data.clientId &&
-        this.#data.clientSecret &&
-        this.#data.scope &&
-        this.#data.oAuthUrl &&
-        this.#data.tokenUrl &&
-        this.#data.redirectUrl);
+    return !!(
+      this.#data.clientId &&
+      this.#data.clientSecret &&
+      this.#data.scope &&
+      this.#data.oAuthUrl &&
+      this.#data.tokenUrl &&
+      this.#data.redirectUrl
+    );
   }
 
   toString(): string {

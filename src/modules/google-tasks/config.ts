@@ -1,4 +1,4 @@
-import { DefaultConfig } from '../interface';
+import {DefaultConfig} from '../interface';
 
 const CONFIG_HELP = `
 This module will display tasks from the provided lists. The following task types will be displayed
@@ -35,12 +35,15 @@ export const DEFAULT_CONFIG: DefaultConfig = {
   mergeStrategy: 'DEFAULT_WITH_STORED_EXCLUSIVE',
   help: CONFIG_HELP,
   helpTemplate: {
-    oauthSettingsVersion: 'Number that is used as a key prefix of the OAuth settings. Increase to start the oAuth flow again.',
-    oauthStartAuthenticationFlow: 'Should be set to "true" only once when the OAuth flow should be started. It will be automatically changed to "false" after the OAuth is started.',
+    oauthSettingsVersion:
+      'Number that is used as a key prefix of the OAuth settings. Increase to start the oAuth flow again.',
+    oauthStartAuthenticationFlow:
+      'Should be set to "true" only once when the OAuth flow should be started. It will be automatically changed to "false" after the OAuth is started.',
     scope: 'Google Tasks access scope - should be the default value: "https://www.googleapis.com/auth/tasks.readonly"',
     clientId: 'Copied from the Google Cloud Console.',
     clientSecret: 'Copied from the Google Cloud Console.',
-    listIds: 'Comma separated listIds to be displayed. The listIds can be found here: https://developers.google.com/tasks/reference/rest/v1/tasklists/list, by clicking "Try it!" and then "Execute"',
+    listIds:
+      'Comma separated listIds to be displayed. The listIds can be found here: https://developers.google.com/tasks/reference/rest/v1/tasklists/list, by clicking "Try it!" and then "Execute"',
   },
   template: {
     oauthSettingsVersion: '0',

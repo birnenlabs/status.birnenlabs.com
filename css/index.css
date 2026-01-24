@@ -1,4 +1,5 @@
-body, html {
+body,
+html {
   margin: 0;
   padding: 0;
 }
@@ -52,7 +53,7 @@ body:has(.urgent) {
 
 .important:hover {
   /** calculated as #d44 + #fff3 */
-  background-color: #e46969
+  background-color: #e46969;
 }
 
 .urgent {

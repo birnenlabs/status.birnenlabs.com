@@ -1,22 +1,25 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <!-- Disallow connections to external services. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://*.firebasedatabase.app; style-src 'self' 'unsafe-inline'; connect-src *; frame-src 'self' https://*.firebasedatabase.app">
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' https://*.firebasedatabase.app; style-src 'self' 'unsafe-inline'; connect-src *; frame-src 'self' https://*.firebasedatabase.app"
+    />
 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=300, height=0, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="/icon-192x192.png">
-    <link rel="stylesheet" href="./index.css">
+    <link rel="icon" type="image/png" href="/icon-192x192.png" />
+    <link rel="stylesheet" href="/css/index.css" />
     <title>status bar</title>
 
     <!-- Placeholder for setting .box class padding -->
-    <style id="visible-area-style"></style>  
+    <style id="visible-area-style"></style>
 
     <!-- Placeholder for setting module styles -->
     <style id="module-style"></style>
 
-    <script type='module' src="/src/startup.ts"></script>
+    <script type="module" src="/src/startup.ts"></script>
   </head>
   <body>
     <div id="main-container">

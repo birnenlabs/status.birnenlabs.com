@@ -1,6 +1,6 @@
-import { FirebaseApp, initializeApp } from 'firebase/app';
-import { DataSnapshot, getDatabase, onValue, ref, Unsubscribe } from 'firebase/database';
-import { CustomCss, DefaultConfig, PushModuleInterface, RefreshResultItem } from '../interface';
+import {FirebaseApp, initializeApp} from 'firebase/app';
+import {DataSnapshot, getDatabase, onValue, ref, Unsubscribe} from 'firebase/database';
+import {CustomCss, DefaultConfig, PushModuleInterface, RefreshResultItem} from '../interface';
 
 const HELP = `
 Required steps for the Firebase module to work:
@@ -44,8 +44,10 @@ export class FirebaseBaseModule extends PushModuleInterface {
       mergeStrategy: 'DEFAULT_WITH_STORED_EXCLUSIVE',
       help: HELP + this.#help,
       helpTemplate: {
-        databaseUrl: 'This is an url provided in the realtime database console (https://console.firebase.google.com/). Should be similar to: https://[project-id]-default-rtdb.europe-west1.firebasedatabase.app/',
-        databaseToken: 'This is a simple way to allow passwordless access to firebase. It is a key that will be used as a part of the path where the data is stored. MUST BE at least 20 characters long.',
+        databaseUrl:
+          'This is an url provided in the realtime database console (https://console.firebase.google.com/). Should be similar to: https://[project-id]-default-rtdb.europe-west1.firebasedatabase.app/',
+        databaseToken:
+          'This is a simple way to allow passwordless access to firebase. It is a key that will be used as a part of the path where the data is stored. MUST BE at least 20 characters long.',
       },
       template: {
         databaseUrl: '',
@@ -57,7 +59,7 @@ export class FirebaseBaseModule extends PushModuleInterface {
   setConfig(config: Record<string, string>): void {
     this.#unsubscribe();
     if (config.databaseUrl && config.databaseToken && config.databaseToken.length >= 20) {
-      const firebaseConfig = { databaseURL: config.databaseUrl };
+      const firebaseConfig = {databaseURL: config.databaseUrl};
       try {
         this.#firebaseApp = initializeApp(firebaseConfig);
       } catch (e: any) {

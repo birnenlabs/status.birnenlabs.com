@@ -3,7 +3,9 @@ import {ModuleInterface} from '../modules/interface';
 const LOCAL_STORAGE_ENABLED = 'status-modules-enabled';
 
 export function getEnabledModules(): string[] {
-  return getEnabledModulesString().split('\n').filter((v) => v);
+  return getEnabledModulesString()
+    .split('\n')
+    .filter((v) => v);
 }
 
 export function getEnabledModulesString(): string {
@@ -75,15 +77,19 @@ export function getModuleConfig(module: ModuleInterface): Record<string, string>
 }
 
 export function objectToString(o: Record<string, string>): string {
-  return Object.entries(o).map(([k, v]) => `${k}:${v}`).join('\n');
+  return Object.entries(o)
+    .map(([k, v]) => `${k}:${v}`)
+    .join('\n');
 }
 
 export function stringToObject(s: string): Record<string, string> {
   return Object.fromEntries(
-      s.split('\n')
-          .filter((line) => line)
-          .map((line) => line.split(':'))
-          .map((arr) => [arr[0], arr.slice(1).join(':')]));
+    s
+      .split('\n')
+      .filter((line) => line)
+      .map((line) => line.split(':'))
+      .map((arr) => [arr[0], arr.slice(1).join(':')]),
+  );
 }
 
 function moduleConfigKey(module: ModuleInterface): string {

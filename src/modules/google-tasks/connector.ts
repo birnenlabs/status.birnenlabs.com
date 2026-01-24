@@ -37,14 +37,13 @@ export class TasksConnector {
         return await this.#retrieveDataWithRetry(listId, true);
       }
       return this.#processFailure(response);
-
     } finally {
       console.timeEnd(consoleTimeId);
     }
   }
 
   async #processSuccess(response: Response): Promise<TaskItem[]> {
-    const json: { items?: any[] } = await response.json();
+    const json: {items?: any[]} = await response.json();
     return this.#jsonToTaskItems(json.items || []);
   }
 
@@ -55,15 +54,18 @@ export class TasksConnector {
 
   #jsonToTaskItems(items: any[]): TaskItem[] {
     const now = new Date();
-    const result = items.map((item): TaskItem => ({
-      title: item.title,
-      url: item.webViewLink,
-      // The due date coming from the tasks API is always midnight UTC (the API is not returning
-      // task time even when it is set) and the string timestamp ends with 'Z'.
-      // Let's remove trailing Z to interpret the date in the local timezone.
-      dueDate: item.due ? new Date(item.due.replace(/Z$/, '')) : undefined,
-    }))
-        .filter((item) => !item.dueDate || item.dueDate <= now);
+    const result = items
+      .map(
+        (item): TaskItem => ({
+          title: item.title,
+          url: item.webViewLink,
+          // The due date coming from the tasks API is always midnight UTC (the API is not returning
+          // task time even when it is set) and the string timestamp ends with 'Z'.
+          // Let's remove trailing Z to interpret the date in the local timezone.
+          dueDate: item.due ? new Date(item.due.replace(/Z$/, '')) : undefined,
+        }),
+      )
+      .filter((item) => !item.dueDate || item.dueDate <= now);
     console.log(`Retrieved ${items.length} tasks, returning ${result.length} tasks after filtering future ones.`);
     return result;
   }
@@ -84,7 +86,7 @@ export class TasksConnector {
       method: 'GET',
       mode: 'cors',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'cache-control': 'no-store',
       },
     };

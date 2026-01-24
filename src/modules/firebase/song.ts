@@ -1,5 +1,5 @@
-import { CustomCss, ELLIPSIS, RefreshResultItem } from '../interface';
-import { FirebaseBaseModule } from './base';
+import {CustomCss, ELLIPSIS, RefreshResultItem} from '../interface';
+import {FirebaseBaseModule} from './base';
 
 interface Song {
   title?: string;
@@ -45,11 +45,13 @@ export class SongModule extends FirebaseBaseModule {
       const titleSplit = song.title.split(' ').filter((i) => i);
       // Let's display at most 5 words from the title.
       const split = titleSplit.length > 6;
-      return [{
-        value: `${song.artist} - ${titleSplit.slice(0, split ? 5 : undefined).join(' ')}${split ? ELLIPSIS : ''}`,
-        extendedValue: split ? ` ${titleSplit.slice(5).join(' ')}` : '',
-        classNames: ['default'],
-      }];
+      return [
+        {
+          value: `${song.artist} - ${titleSplit.slice(0, split ? 5 : undefined).join(' ')}${split ? ELLIPSIS : ''}`,
+          extendedValue: split ? ` ${titleSplit.slice(5).join(' ')}` : '',
+          classNames: ['default'],
+        },
+      ];
     } else {
       console.log('SongModule onValue - expired or empty song', song);
       return [];

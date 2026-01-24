@@ -1,4 +1,4 @@
-import { DefaultConfig, RefreshResult, ScheduledModuleInterface } from '../interface';
+import {DefaultConfig, RefreshResult, ScheduledModuleInterface} from '../interface';
 
 /**
  * Implements ScheduledModuleInterface
@@ -15,9 +15,11 @@ export class DateModule extends ScheduledModuleInterface {
     console.log(forced);
     const now = new Date();
     return {
-      items: [{
-        value: now.toLocaleDateString(),
-      }],
+      items: [
+        {
+          value: now.toLocaleDateString(),
+        },
+      ],
     };
   }
 

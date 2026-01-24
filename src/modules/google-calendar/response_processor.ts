@@ -7,7 +7,7 @@ import {CalendarEntry} from './calendar_entry';
  *   calendarItem-firstCalendar-(true|false)           - true if item is from the first calendar
  *   calendarItem-(accepted|maybe|rejected|suppressed) - item response status
  *   calendarItem-missingRoom                          - room is required but not set
-*/
+ */
 
 export const CSS = [
   {
@@ -30,11 +30,14 @@ export const CSS = [
   },
 ];
 
-
 /**
-   * Filters inputEntries and creats RefreshResult.
-   */
-export function createRefreshResult(inputEntries: CalendarEntry[], sourceCalendars: string[], requiredLocationPrefix: string[]): RefreshResult {
+ * Filters inputEntries and creats RefreshResult.
+ */
+export function createRefreshResult(
+  inputEntries: CalendarEntry[],
+  sourceCalendars: string[],
+  requiredLocationPrefix: string[],
+): RefreshResult {
   const items: RefreshResultItem[] = [];
 
   const requiredLocationsMap = new Map(sourceCalendars.map((key, index) => [key, requiredLocationPrefix[index]]));
@@ -48,11 +51,11 @@ export function createRefreshResult(inputEntries: CalendarEntry[], sourceCalenda
   const midnightSec = dateToSec(midnigthDate);
 
   const calendarEntries = inputEntries
-      .filter((entry) => entry.status() !== 'suppressed')
-      .filter((entry) => !entry.isExpired(nowSec))
-  // Show only events that are starting before 23:59:59 today.
-      .filter((entry) => entry.isBefore(midnightSec - 1))
-      .sort(CalendarEntry.compare);
+    .filter((entry) => entry.status() !== 'suppressed')
+    .filter((entry) => !entry.isExpired(nowSec))
+    // Show only events that are starting before 23:59:59 today.
+    .filter((entry) => entry.isBefore(midnightSec - 1))
+    .sort(CalendarEntry.compare);
 
   console.log(`Skipped ${inputEntries.length - calendarEntries.length} expired or suppressed items.`);
 
@@ -130,15 +133,18 @@ export function createRefreshResult(inputEntries: CalendarEntry[], sourceCalenda
     const entryNextUpdateTs = entry.nextUpdateTs(nowSec);
     if (entryNextUpdateTs < nextUpdateTs) {
       nextUpdateTs = entryNextUpdateTs;
-      console.log(`Next update from this event: ${secToDate(entryNextUpdateTs).toLocaleString('sv')} [earliest so far]`);
+      console.log(
+        `Next update from this event: ${secToDate(entryNextUpdateTs).toLocaleString('sv')} [earliest so far]`,
+      );
     } else {
       console.log(`Next update from this event: ${secToDate(entryNextUpdateTs).toLocaleString('sv')}`);
     }
 
     const entryRejected = entry.status() === 'rejected';
-    const displayFullTitle = ((!fullTitleDisplayed && !entryRejected) ||
-        (entry.title().length <= 12 && !entryRejected) ||
-        calendarEntries.length == 1);
+    const displayFullTitle =
+      (!fullTitleDisplayed && !entryRejected) ||
+      (entry.title().length <= 12 && !entryRejected) ||
+      calendarEntries.length == 1;
 
     if (displayFullTitle) {
       item.value += entry.title();
