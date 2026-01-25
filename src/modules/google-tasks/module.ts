@@ -76,7 +76,7 @@ export class GoogleTasksModule extends ScheduledModuleInterface {
     return DEFAULT_CONFIG;
   }
 
-  override setConfig(config: {[key: string]: string}): void {
+  override setConfig(config: Record<string, string>): void {
     this.listIds = config['listIds']?.split(',').filter((i) => i) ?? [];
     this.oAuthSettings = upsertOAuthSettingsForGoogle(
       this.name,

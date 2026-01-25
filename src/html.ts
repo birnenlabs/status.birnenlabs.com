@@ -11,7 +11,7 @@ export function init(modules: ModuleInterface[]): void {
   console.log('Initialising base DOM structure.');
   const mainEl = document.getElementById('main-container') as HTMLDivElement;
 
-  modules.forEach((module) => {
+  for (const module of modules) {
     const el = document.createElement('span');
     el.id = module.name;
     mainEl.appendChild(el);
@@ -21,7 +21,7 @@ export function init(modules: ModuleInterface[]): void {
     sepEl.classList.add('box-sep');
     sepEl.textContent = SEP_EL;
     mainEl.appendChild(sepEl);
-  });
+  }
 
   // Remove the last separator
   if (mainEl.lastChild) {
@@ -65,8 +65,9 @@ function renderItems(moduleName: string, items: RefreshResultItem[]): void {
     }
   }
 
-  items.forEach((item, i) => {
+  for (let i = 0; i < items.length; i++) {
     const el = parentEl.children[2 * i] as HTMLElement;
+    const item = items[i]!;
 
     el.className = item.classNames
       ? item.classNames.map((className: string) => generateCssName(moduleName, className)).join(' ')
@@ -88,7 +89,7 @@ function renderItems(moduleName: string, items: RefreshResultItem[]): void {
     }
 
     setElement(el, item.value, item.extendedValue);
-  });
+  }
 
   const display = items.length === 0 ? 'none' : '';
   parentEl.style.display = display;
@@ -139,6 +140,10 @@ function updateView(el: HTMLElement): void {
 export function mouseover(e: MouseEvent): void {
   const el = e.target as HTMLElement;
   if (el && el.hasAttribute(BASE_ATT)) {
+    // el.getBoundingClientRect returns element position in relation to
+    // the viewport - the same as clientX and clientY from mouse event is using.
+    // Let's store the clientX value of the element before expansion.
+    // It will be used to hide it in mouse move event if the coursor would have left.
     const elClientX = Math.ceil(el.getBoundingClientRect().left + el.getBoundingClientRect().width + 1);
     el.setAttribute(MODE_ATT, `${elClientX}`);
     updateView(el);

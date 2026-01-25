@@ -2,22 +2,20 @@ import {loadModules} from './modules/loader';
 import {initModuleRenderer} from './modules/renderer';
 import {init, render, mousemove, mouseover, mouseout} from './html';
 
-async function onPageLoad(): Promise<void> {
+function onPageLoad(): Promise<void> {
   const consoleLog = 'Modules: init';
   console.time(consoleLog);
   console.group(consoleLog);
 
-  try {
-    const modules = loadModules();
-    init(modules);
+  const modules = loadModules();
+  init(modules);
 
-    for (const module of modules) {
-      await initModuleRenderer(module, render);
-    }
-  } finally {
-    console.groupEnd();
-    console.timeEnd(consoleLog);
+  let result = Promise.resolve();
+  for (const module of modules) {
+    result = result.then(() => initModuleRenderer(module, render));
   }
+
+  return result.finally(() => console.groupEnd()).finally(() => console.timeEnd(consoleLog));
 }
 
 /**
@@ -32,45 +30,37 @@ function calculateVisibleArea(): void {
     // Limit max height to 60px
     60,
   );
-  const el = document.getElementById('main-container');
-  if (el instanceof HTMLDivElement) {
-    // main container will have the same height as visible area
-    el.style.height = `${areaHeight}px`;
-    // line height will cause child elements to center vertically
-    el.style.lineHeight = `${areaHeight}px`;
-    el.style.fontSize = `${0.6 * areaHeight}px`;
-  }
+  const el = document.getElementById('main-container') as HTMLDivElement;
+  // main container will have the same height as visible area
+  el.style.height = `${areaHeight}px`;
+  // line height will cause child elements to center vertically
+  el.style.lineHeight = `${areaHeight}px`;
+  el.style.fontSize = `${0.6 * areaHeight}px`;
 }
 
 /**
  * Init mouse over events
  */
 function setMouseOver(): void {
-  const el = document.getElementById('main-container');
-  if (el instanceof HTMLDivElement) {
-    el.addEventListener('mouseover', mouseover, false);
-    el.addEventListener('mouseout', mouseout, false);
-    el.addEventListener('mousemove', mousemove, false);
-  }
+  const el = document.getElementById('main-container') as HTMLDivElement;
+  el.addEventListener('mouseover', mouseover, false);
+  el.addEventListener('mouseout', mouseout, false);
+  el.addEventListener('mousemove', mousemove, false);
 }
 
 /** init settings */
 function initSettingsLink(): void {
-  const el = document.getElementById('settings-link');
-  if (el instanceof HTMLSpanElement) {
-    el.onclick = () => window.open('./settings.html', 'window', 'toolbar=no,menubar=no,resizable=yes');
-  }
+  const el = document.getElementById('settings-link') as HTMLSpanElement;
+  el.onclick = () => window.open('./settings.html', 'window', 'toolbar=no,menubar=no,resizable=yes');
 }
 
 /** set blur class */
 function setBlurClass(): void {
-  const el = document.getElementById('main-container');
-  if (el instanceof HTMLDivElement) {
-    if (document.hasFocus()) {
-      el.classList.remove('blur');
-    } else {
-      el.classList.add('blur');
-    }
+  const el = document.getElementById('main-container') as HTMLDivElement;
+  if (document.hasFocus()) {
+    el.classList.remove('blur');
+  } else {
+    el.classList.add('blur');
   }
 }
 

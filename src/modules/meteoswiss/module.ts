@@ -26,15 +26,12 @@ Use this map to get coordinates for your area: https://tools.retorte.ch/map/. Th
  */
 export class MeteoSwissModule extends ScheduledModuleInterface {
   #meteoSwissLib: MeteoSwissLib | undefined;
-  public override css: CustomCss[];
 
   /**
    * Constructor
    */
   constructor() {
-    const css = MeteoSwissModule.#createCss(DEFAULT_RAIN_COLOR);
-    super(20, css);
-    this.css = css;
+    super(20, MeteoSwissModule.#createCss(DEFAULT_RAIN_COLOR));
   }
 
   public override refresh(forced: boolean): Promise<RefreshResult> {

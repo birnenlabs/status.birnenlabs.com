@@ -22,34 +22,36 @@ export class TasksConnector {
     return this.#retrieveDataWithRetry(listId);
   }
 
-  async #retrieveDataWithRetry(listId: string, isItSecondTry = false): Promise<TaskItem[]> {
+  #retrieveDataWithRetry(listId: string, isItSecondTry = false): Promise<TaskItem[]> {
     const consoleTimeId = `TasksConnector.retrieveDataWithRetry ${new Date().toLocaleTimeString([], {timeStyle: 'short'})} listId=${listId} isItSecondTry=${isItSecondTry}`;
     console.time(consoleTimeId);
 
-    try {
-      const accessToken = await this.#oAuth.getAccessToken(isItSecondTry);
-      const response = await this.#fetchTasks(accessToken, listId);
-
-      if (response.ok) {
-        return await this.#processSuccess(response);
-      }
-      if (!isItSecondTry) {
-        return await this.#retrieveDataWithRetry(listId, true);
-      }
-      return this.#processFailure(response);
-    } finally {
-      console.timeEnd(consoleTimeId);
-    }
+    return this.#oAuth
+      .getAccessToken(/* use isItSecondTry flag to force refresh on second try*/ isItSecondTry)
+      .then((accessToken) => this.#fetchTasks(accessToken, listId))
+      .then((response) => {
+        if (response.status == 200) {
+          return this.#processSuccess(response);
+        }
+        if (!isItSecondTry) {
+          return this.#retrieveDataWithRetry(listId, true);
+        }
+        return this.#processFailure(response);
+      })
+      .finally(() => console.timeEnd(consoleTimeId));
   }
 
-  async #processSuccess(response: Response): Promise<TaskItem[]> {
-    const json: {items?: any[]} = await response.json();
-    return this.#jsonToTaskItems(json.items || []);
+  #processSuccess(response: Response): Promise<TaskItem[]> {
+    return response
+      .json()
+      .then((json) => json.items)
+      .then((items) => this.#jsonToTaskItems(items));
   }
 
-  async #processFailure(response: Response): Promise<TaskItem[]> {
-    const text = await response.text();
-    throw new Error(text);
+  #processFailure(response: Response): Promise<TaskItem[]> {
+    return response.text().then((text) => {
+      throw new Error(text);
+    });
   }
 
   #jsonToTaskItems(items: any[]): TaskItem[] {

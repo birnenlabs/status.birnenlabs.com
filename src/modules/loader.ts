@@ -53,9 +53,8 @@ export function loadModules(): (PushModuleInterface | ScheduledModuleInterface)[
     } else {
       const err = new Error(`Module ${moduleName} not found.`);
       console.warn(err);
-      const errorModule = new ErrorModule(err);
-      errorModule.addNameSuffix(moduleName);
-      newModule = errorModule;
+      newModule = new ErrorModule(err);
+      newModule.addNameSuffix(moduleName);
     }
 
     // Guarantee unique names
@@ -80,13 +79,9 @@ export function loadCss(modules: ModuleInterface[]): string {
     for (const css of module.css) {
       if (REGEXP_CSS_NAME.test(css.className)) {
         const value = Object.entries(css)
-          .filter(
-            (entry): entry is [string, string] =>
-              entry[0] !== 'className' &&
-              !!entry[1] &&
-              REGEXP_CSS_PROPERTY.test(entry[0]) &&
-              REGEXP_CSS_PROPERTY_VALUE.test(entry[1]),
-          )
+          .filter((entry) => entry[0] != 'className')
+          .filter((entry) => REGEXP_CSS_PROPERTY.test(entry[0]))
+          .filter((entry) => entry[1] && REGEXP_CSS_PROPERTY_VALUE.test(entry[1]))
           .map((entry) => `\t${entry[0].replace(/[A-Z]/g, (m) => '-' + m.toLowerCase())}: ${entry[1]};`)
           .join('\n');
 

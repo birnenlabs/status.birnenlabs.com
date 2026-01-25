@@ -17,10 +17,6 @@ interface Feature {
   properties: Properties;
 }
 
-interface JsonResponse {
-  features: Feature[];
-}
-
 /**
  * Class that gets data from meteo swiss stations.
  * It is adjusted for Zurich and Adliswil
@@ -86,9 +82,9 @@ export class MeteoSwissLib {
       'https://data.geo.admin.ch/ch.meteoschweiz.messwerte-niederschlag-10min/ch.meteoschweiz.messwerte-niederschlag-10min_en.json';
     const featuresPromise = this.#fetchFeatures(url).then((features) =>
       features
-        .filter((feature) => this.#filterAltitude(feature))
-        .filter((feature) => this.#filterInactive(feature))
-        .filter((feature) => this.#filterLocationRain(feature)),
+        .filter(this.#filterAltitude.bind(this))
+        .filter(this.#filterInactive.bind(this))
+        .filter(this.#filterLocationRain.bind(this)),
     );
 
     const resultPromise: Promise<boolean> = featuresPromise.then((features) =>
@@ -112,11 +108,11 @@ export class MeteoSwissLib {
   }
 
   #fetchAndGetAverage(url: string): Promise<string> {
-    const featuresPromise: Promise<Feature[]> = this.#fetchFeatures(url).then((features) =>
+    const featuresPromise = this.#fetchFeatures(url).then((features) =>
       features
-        .filter((feature) => this.#filterAltitude(feature))
-        .filter((feature) => this.#filterInactive(feature))
-        .filter((feature) => this.#filterLocation(feature)),
+        .filter(this.#filterAltitude.bind(this))
+        .filter(this.#filterInactive.bind(this))
+        .filter(this.#filterLocation.bind(this)),
     );
 
     const resultPromise: Promise<string> = featuresPromise.then((features) =>
@@ -147,13 +143,15 @@ export class MeteoSwissLib {
     });
   }
 
-  async #fetchFeatures(url: string): Promise<Feature[]> {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Cannot fetch: ${response.statusText}`);
-    }
-    const jsonResponse: JsonResponse = await response.json();
-    return jsonResponse.features;
+  #fetchFeatures(url: string): Promise<Feature[]> {
+    return fetch(url)
+      .then((response) => {
+        if (response.status != 200) {
+          throw new Error('Cannot fetch.');
+        }
+        return response.json();
+      })
+      .then((jsonResponse) => jsonResponse.features);
   }
 
   #filterInactive(feature: Feature): boolean {
@@ -177,7 +175,11 @@ export class MeteoSwissLib {
   }
 
   #filterLocationInternal(feature: Feature, minX: number, maxX: number, minY: number, maxY: number): boolean {
-    const [y, x] = feature.geometry.coordinates;
-    return x >= minX && x <= maxX && y >= minY && y <= maxY;
+    return (
+      feature.geometry.coordinates[0] >= minY &&
+      feature.geometry.coordinates[0] <= maxY &&
+      feature.geometry.coordinates[1] >= minX &&
+      feature.geometry.coordinates[1] <= maxX
+    );
   }
 }
