@@ -7,8 +7,8 @@ In order to start using calendar, you need to complete the following steps:
 
 1. Open the Google Cloud console (https://console.cloud.google.com) and create OAuth credentials:
     - Type: Web application
-    - Authorised JavaScript origins: https://birnenlabs.com
-    - Authorised redirect URIs: https://birnenlabs.com/oauth/popup.html
+    - Authorised JavaScript origins: https://status.birnenlabs.com
+    - Authorised redirect URIs: https://status.birnenlabs.com/oauth.html
     - Enable Google Calendar API
 Then copy the client Id and client Secret to the settings.
 

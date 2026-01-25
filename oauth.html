@@ -1,0 +1,12 @@
+<!-- Popup window that processes redirection (closes popup after flow and refreshes parent window) -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script type="module">
+      import {processOAuthRedirect} from '/src/lib/oauth.js';
+      window.processOAuthRedirect = processOAuthRedirect;
+    </script>
+  </head>
+  <body onload="processOAuthRedirect()"></body>
+</html>

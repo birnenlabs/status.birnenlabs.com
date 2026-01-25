@@ -60,7 +60,7 @@ function syncAndGetOAuthSettings(module: ModuleInterface, config: Record<string,
   const oAuthSettings = new OAuthSettings(module.name + '-oauth-v' + config['oauthSettingsVersion']);
   oAuthSettings.setOAuthUrl('https://accounts.google.com/o/oauth2/auth');
   oAuthSettings.setTokenUrl('https://accounts.google.com/o/oauth2/token');
-  oAuthSettings.setRedirectUrl('https://birnenlabs.com/oauth/popup.html');
+  oAuthSettings.setRedirectUrl('https://status.birnenlabs.com/oauth.html');
   oAuthSettings.setScope(config['scope'] || '');
   oAuthSettings.setClientId(config['clientId'] || '');
   oAuthSettings.setClientSecret(config['clientSecret'] || '');
