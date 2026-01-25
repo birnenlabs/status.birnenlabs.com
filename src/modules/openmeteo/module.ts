@@ -79,7 +79,7 @@ export class OpenMeteoModule extends ScheduledModuleInterface {
                   jsonResponse.current.relative_humidity_2m + jsonResponse.current_units.relative_humidity_2m,
                   jsonResponse.current.wind_speed_10m + jsonResponse.current_units.wind_speed_10m,
                 ],
-                href: this.#windyUrl,
+                onclick: () => window.open(this.#windyUrl, 'window', 'toolbar=no,menubar=no,resizable=yes'),
                 classNames: jsonResponse.current.precipitation > 0 ? ['rain'] : [],
               },
             ],

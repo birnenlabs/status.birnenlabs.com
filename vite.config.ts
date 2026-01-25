@@ -26,7 +26,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        oauth: resolve(__dirname, 'oauth.html'),
         settings: resolve(__dirname, 'settings.html'),
       },
       preserveEntrySignatures: 'strict',

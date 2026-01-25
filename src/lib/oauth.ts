@@ -29,6 +29,67 @@ interface OAuthSettingsData {
 }
 
 /**
+ *
+ * @param settings Function will st
+ * @returns
+ */
+export function launchOAuthPopup(settings: OAuthSettings): void {
+  const authUrl = settings.createOAuthUrl();
+  if (authUrl) {
+    if (window.open(authUrl.href, 'oauth-popup', 'width=600,height=700,status=no,resizable=yes')) {
+      console.log('[launchOAuthPopup] Starting OAuth flow');
+    } else {
+      console.error('[launchOAuthPopup] Could not open popup window.');
+      return;
+    }
+  } else {
+    console.error('[launchOAuthPopup] Could not create OAuth url.');
+    return;
+  }
+
+  // At this point window is opened - let's add listener with timer
+  const handleMessage = (event: MessageEvent) => {
+    if (event.origin === window.location.origin && event.data.type === 'oauth-code-received') {
+      console.log('[launchOAuthPopup] OAuth code received, starting refreshToken flow');
+
+      const params: RequestInit = {
+        method: 'POST',
+        mode: 'cors',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(settings.createRefreshTokenData(event.data.code)),
+      };
+
+      return fetch(settings.getTokenUrl()!, params)
+        .then((response) => {
+          if (response.status != 200) {
+            throw new Error(`Cannot get token: url: ${settings.getTokenUrl()}, response: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((json: {refresh_token?: string}) => {
+          if (!json.refresh_token) {
+            throw new Error(`RefreshToken not found in response: ${JSON.stringify(json)}`);
+          }
+          settings.setRefreshToken(json.refresh_token);
+          settings.save();
+          return;
+        });
+    } else {
+      console.log(
+        `[launchOAuthPopup] Could not process event: event.origin=${event.origin}, window.location.origin=${window.location.origin}, event.data.type=${event.data.type}.`,
+      );
+      return;
+    }
+  };
+
+  window.addEventListener('message', handleMessage);
+  setTimeout(() => {
+    window.removeEventListener('message', handleMessage);
+    console.log('[launchOAuthPopup] Event listener removed after 60 seconds.');
+  }, 60000);
+}
+
+/**
  * Helper method that should be invoked in the oauth redirect window.
  * The popup page needs to specify OAuthSettings name in 'state' get parameter.
  * This method will:

@@ -122,7 +122,7 @@ export function createRefreshResult(
     };
 
     if (entry.htmlLink()) {
-      item.href = entry.htmlLink();
+      item.onclick = () => window.open(entry.htmlLink(), 'window', 'toolbar=no,menubar=no,resizable=yes');
     }
 
     const requiredLocation = requiredLocationsMap.get(entry.getCalendarId());

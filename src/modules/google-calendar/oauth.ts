@@ -15,6 +15,8 @@ import {setModuleConfigString, objectToString} from '../../settings/settings';
 export function processOAuth(module: ModuleInterface, config: Record<string, string>): OAuth | string {
   const settings = syncAndGetOAuthSettings(module, config);
 
+  
+
   // If oauthStartAuthenticationFlow then start the process.
   if (config['oauthStartAuthenticationFlow'] === 'true') {
     if (settings.isInitialised()) {
@@ -60,11 +62,12 @@ function syncAndGetOAuthSettings(module: ModuleInterface, config: Record<string,
   const oAuthSettings = new OAuthSettings(module.name + '-oauth-v' + config['oauthSettingsVersion']);
   oAuthSettings.setOAuthUrl('https://accounts.google.com/o/oauth2/auth');
   oAuthSettings.setTokenUrl('https://accounts.google.com/o/oauth2/token');
-  oAuthSettings.setRedirectUrl('https://status.birnenlabs.com/oauth.html');
+  oAuthSettings.setRedirectUrl('https://birnenlabs.com/oauth/oauth.html');
   oAuthSettings.setScope(config['scope'] || '');
   oAuthSettings.setClientId(config['clientId'] || '');
   oAuthSettings.setClientSecret(config['clientSecret'] || '');
-  oAuthSettings.setReturnUrl('https://status.birnenlabs.com/settings.html');
+  // This is not important - we take the code using window postMessage.
+  oAuthSettings.setReturnUrl('https://birnenlabs.com');
   oAuthSettings.save();
 
   return oAuthSettings;

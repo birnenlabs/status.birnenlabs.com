@@ -79,9 +79,9 @@ function renderItems(moduleName: string, items: RefreshResultItem[]): void {
       el.classList.add('important');
     }
 
-    if (item.href) {
+    if (item.onclick) {
       el.classList.add('link');
-      el.onclick = () => window.open(item.href, 'window', 'toolbar=no,menubar=no,resizable=yes');
+      el.onclick = item.onclick;
     } else {
       el.removeAttribute('onclick');
       el.classList.remove('link');

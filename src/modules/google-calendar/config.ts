@@ -3,18 +3,16 @@ import {DefaultConfig} from '../interface';
 const CONFIG_HELP = `
 GOOGLE CALENDAR AUTHENTICATION
 
-In order to start using calendar, you need to complete the following steps:
+In order to start using calendar, you need to create OAuth settings:
 
-1. Open the Google Cloud console (https://console.cloud.google.com) and create OAuth credentials:
+Open the Google Cloud console (https://console.cloud.google.com) and create OAuth credentials:
     - Type: Web application
     - Authorised JavaScript origins: https://status.birnenlabs.com
     - Authorised redirect URIs: https://status.birnenlabs.com/oauth.html
     - Enable Google Calendar API
 Then copy the client Id and client Secret to the settings.
 
-2. If you want to copy calendar events (i.e. use destinationCalendarId setting) please change the scope from the "https://www.googleapis.com/auth/calendar.readonly" to "https://www.googleapis.com/auth/calendar.events".
-
-3. Set value of "oauthStartAuthenticationFlow" to true and save settings.
+Refresh status bar and click the link to start OAuth flow.
 
 If authentication stopped working or you want to change the scope after calendar was initialised, the easiest way is to increase the "oauthSettingsVersion" value, which will force reauthentication.
 `;
@@ -26,8 +24,6 @@ export const DEFAULT_CONFIG: DefaultConfig = {
   helpTemplate: {
     oauthSettingsVersion:
       'Number that is used as a key prefix of the OAuth settings. Increase to start the oAuth flow again.',
-    oauthStartAuthenticationFlow:
-      'Should be set to "true" only once when the OAuth flow should be started. It will be automatically changed to "false" after the OAuth is started.',
     scope:
       'Google Calendar access scope - one of the following values (depending if destinationCalendar is used): "https://www.googleapis.com/auth/calendar.readonly" or "https://www.googleapis.com/auth/calendar.events"',
     clientId: 'Copied from the Google Cloud Console.',
@@ -41,7 +37,6 @@ export const DEFAULT_CONFIG: DefaultConfig = {
   },
   template: {
     oauthSettingsVersion: '0',
-    oauthStartAuthenticationFlow: 'false',
     scope: 'https://www.googleapis.com/auth/calendar.readonly',
     clientId: '',
     clientSecret: '',

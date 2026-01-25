@@ -57,7 +57,12 @@ export class MeteoSwissModule extends ScheduledModuleInterface {
           {
             value: temperature,
             extendedValue: [humidity, wind],
-            href: 'https://www.meteoswiss.admin.ch/services-and-publications/applications/precipitation.html',
+            onclick: () =>
+              window.open(
+                'https://www.meteoswiss.admin.ch/services-and-publications/applications/precipitation.html',
+                'window',
+                'toolbar=no,menubar=no,resizable=yes',
+              ),
             classNames: isRaining ? ['rain'] : [],
           },
         ],

@@ -11,7 +11,7 @@ export interface CustomCss {
 export interface RefreshResultItem {
   value: string;
   extendedValue?: string[] | string;
-  href?: string;
+  onclick?: (e: Event) => any;
   classNames?: string[];
   important?: boolean;
   urgent?: boolean;

@@ -1,10 +1,9 @@
 import {ScheduledModuleInterface, RefreshResult, DefaultConfig} from '../interface';
-import {processOAuth} from './oauth';
 import {CalendarConnector, CalendarResult} from './connector';
 import {createRefreshResult, CSS} from './response_processor';
-import {OAuth} from '../../lib/oauth';
 import {combine} from '../../lib/promise';
 import {DEFAULT_CONFIG} from './config';
+import {OAuth, OAuthSettings, launchOAuthPopup} from '../../lib/oauth';
 
 // Force sync and render calendar once per 6 hours.
 const MAX_INTERVAL_BETWEEN_SYNC_MS = 21600000;
@@ -13,8 +12,7 @@ const MAX_INTERVAL_BETWEEN_SYNC_MS = 21600000;
  * Implements ScheduledModuleInterface
  */
 export class GoogleCalendarModule extends ScheduledModuleInterface {
-  #connector: CalendarConnector | undefined;
-  #errorMessage: string;
+  #oAuthSettings: OAuthSettings | undefined;
   #sourceCalendars: string[];
   #destinationCalendar: string;
   #requiredLocationPrefix: string[];
@@ -31,45 +29,60 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
     // x:52, x:56, x+1:00, x+1:04, x+1:08, ..., x+1:16
     super(4, CSS);
 
-    this.#errorMessage = 'Configuration was not set.';
     this.#sourceCalendars = [];
     this.#destinationCalendar = '';
     this.#requiredLocationPrefix = [];
   }
 
   override refresh(forced: boolean): Promise<RefreshResult> | RefreshResult {
-    if (this.#connector) {
-      console.groupCollapsed(
-        `CalendarModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`,
-      );
-      const timeSync = 'CalendarModule.refresh: sync time';
-      const timeRender = 'CalendarModule.refresh: retrieve time';
-      console.time(timeSync);
-      console.time(timeRender);
-
-      const calendarResultPromise: Promise<CalendarResult[]> = Promise.all(
-        this.#sourceCalendars.map((calendarId) => this.#connector!.retrieveData(calendarId)),
-      );
-
-      const refreshResultPromise: Promise<RefreshResult> = calendarResultPromise
-        .then((results) => this.#createRefreshResult(results, forced))
-        .finally(() => console.timeEnd(timeRender));
-
-      const syncPromise = calendarResultPromise
-        .then((calendarResult) => this.#maybeSyncCalendar(calendarResult.at(0), forced))
-        .finally(() => console.timeEnd(timeSync));
-
-      return combine(refreshResultPromise, syncPromise, (refreshResult: RefreshResult) => refreshResult)
-        .catch((err: Error) => {
-          // If error is thrown from this method, it will be rendered. Reset the last render to force it during the next update.
-          this.#lastRenderMillis = 0;
-          throw err;
-        })
-        .finally(() => console.groupEnd());
-    } else {
+    if (!this.#oAuthSettings) {
       this.#lastRenderMillis = 0;
-      return Promise.reject(new Error(this.#errorMessage));
+      return Promise.reject(new Error('Configuration was not set.'));
     }
+
+    if (!this.#oAuthSettings.isInitialised()) {
+      this.#lastRenderMillis = 0;
+      return Promise.reject(new Error('Scope, clientId or clientSecret is not set. Please go to the settings page.'));
+    }
+
+    if (!this.#oAuthSettings.hasRefreshToken()) {
+      return {
+        items: [{value: 'Click to authenticate', onclick: () => launchOAuthPopup(this.#oAuthSettings!)}],
+        // Force refresh every 2 seconds.
+        forceNextRefreshTs: new Date().getTime() / 1000 + 2,
+      };
+    }
+
+    // Everything was checked, we can now proceed.
+    // Creating connector is inexpensive - it only sets proper references inside.
+    const connector = new CalendarConnector(new OAuth(this.#oAuthSettings));
+    console.groupCollapsed(
+      `CalendarModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`,
+    );
+    const timeSync = 'CalendarModule.refresh: sync time';
+    const timeRender = 'CalendarModule.refresh: retrieve time';
+    console.time(timeSync);
+    console.time(timeRender);
+
+    const calendarResultPromise: Promise<CalendarResult[]> = Promise.all(
+      this.#sourceCalendars.map((calendarId) => connector.retrieveData(calendarId)),
+    );
+
+    const refreshResultPromise: Promise<RefreshResult> = calendarResultPromise
+      .then((results) => this.#createRefreshResult(results, forced))
+      .finally(() => console.timeEnd(timeRender));
+
+    const syncPromise = calendarResultPromise
+      .then((calendarResult) => this.#maybeSyncCalendar(connector, calendarResult.at(0), forced))
+      .finally(() => console.timeEnd(timeSync));
+
+    return combine(refreshResultPromise, syncPromise, (refreshResult: RefreshResult) => refreshResult)
+      .catch((err: Error) => {
+        // If error is thrown from this method, it will be rendered. Reset the last render to force it during the next update.
+        this.#lastRenderMillis = 0;
+        throw err;
+      })
+      .finally(() => console.groupEnd());
   }
 
   #createRefreshResult(calendarResults: CalendarResult[], forced: boolean): RefreshResult | Promise<RefreshResult> {
@@ -96,7 +109,11 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
     return createRefreshResult(entries, this.#sourceCalendars, this.#requiredLocationPrefix);
   }
 
-  #maybeSyncCalendar(calendarResult: CalendarResult | undefined, forced: boolean): Promise<void> {
+  #maybeSyncCalendar(
+    connector: CalendarConnector,
+    calendarResult: CalendarResult | undefined,
+    forced: boolean,
+  ): Promise<void> {
     if (!this.#destinationCalendar) {
       console.log(`Destination calendar not specified, skipping sync.`);
       return Promise.resolve();
@@ -126,7 +143,8 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
 
     console.group(`Maybe sync calendar: ${calendarResult}`);
     const calendarItems = calendarResult.getCalendarEntries().map((calendarEntry) => calendarEntry.getItem());
-    return this.#connector!.syncWithCalendar(calendarItems, this.#destinationCalendar)
+    return connector
+      .syncWithCalendar(calendarItems, this.#destinationCalendar)
       .then(() => {
         this.#lastSyncMillis = nowMillis;
       })
@@ -141,13 +159,26 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
     this.#sourceCalendars = config['sourceCalendars']?.split(',') || [];
     this.#destinationCalendar = config['destinationCalendar'] || '';
     this.#requiredLocationPrefix = config['requiredLocationPrefix']?.split(',') || [];
-    const oAuthOrError = processOAuth(this, config);
-    if (oAuthOrError instanceof OAuth) {
-      this.#connector = new CalendarConnector(oAuthOrError);
-      this.#errorMessage = '';
-    } else {
-      this.#connector = undefined;
-      this.#errorMessage = oAuthOrError;
-    }
+    this.#oAuthSettings = this.#updateOAuthSettings(config);
+  }
+
+  /**
+   * OAuth config is stored separately by OAuth library. Sync it after config of
+   * this module was updated.
+   */
+  #updateOAuthSettings(config: Record<string, string>): OAuthSettings {
+    // Sync OAuth with the module settings
+    const oAuthSettings = new OAuthSettings(this.name + '-oauth-v' + config['oauthSettingsVersion']);
+    oAuthSettings.setOAuthUrl('https://accounts.google.com/o/oauth2/auth');
+    oAuthSettings.setTokenUrl('https://accounts.google.com/o/oauth2/token');
+    oAuthSettings.setRedirectUrl('https://birnenlabs.com/oauth/oauth.html');
+    oAuthSettings.setScope(config['scope'] || '');
+    oAuthSettings.setClientId(config['clientId'] || '');
+    oAuthSettings.setClientSecret(config['clientSecret'] || '');
+    // This is not important - we take the code using window postMessage.
+    oAuthSettings.setReturnUrl('https://birnenlabs.com');
+    oAuthSettings.save();
+
+    return oAuthSettings;
   }
 }

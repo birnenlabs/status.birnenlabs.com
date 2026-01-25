@@ -58,7 +58,7 @@ export class GoogleTasksModule extends ScheduledModuleInterface {
     console.log(`Task: due: ${taskItem.dueDate?.toLocaleString('sv-SV')}, title: ${taskItem.title}`);
     return {
       value: `□ ${taskItem.title}`,
-      href: taskItem.url,
+      onclick: () => window.open(taskItem.url, 'window', 'toolbar=no,menubar=no,resizable=yes'),
       classNames: taskItem.dueDate ? (taskItem.dueDate < midnightToday ? ['overdue'] : ['today']) : [],
     };
   }
