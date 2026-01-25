@@ -49,7 +49,7 @@ export function launchOAuthPopup(settings: OAuthSettings): void {
 
   // At this point window is opened - let's add listener with timer
   const handleMessage = (event: MessageEvent) => {
-    if (event.origin === window.location.origin && event.data.type === 'oauth-code-received') {
+    if (event.origin === 'https://birnenlabs.com' && event.data.type === 'oauth-code-received') {
       console.log('[launchOAuthPopup] OAuth code received, starting refreshToken flow');
 
       const params: RequestInit = {
@@ -75,8 +75,8 @@ export function launchOAuthPopup(settings: OAuthSettings): void {
           return;
         });
     } else {
-      console.log(
-        `[launchOAuthPopup] Could not process event: event.origin=${event.origin}, window.location.origin=${window.location.origin}, event.data.type=${event.data.type}.`,
+      console.error(
+        `[launchOAuthPopup] Could not process event: event.origin=${event.origin}, event.data.type=${event.data.type}.`,
       );
       return;
     }
