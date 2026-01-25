@@ -161,11 +161,20 @@ export class CalendarEntry {
   static getItemStatus(item: CalendarApiItem): EventStatus {
     if (item.eventType === 'outOfOffice' || item.eventType === 'workingLocation') {
       return 'suppressed';
-    } else if (item.creator?.self) {
-      return 'accepted';
-    } else {
-      return CalendarEntry.#responseStatusToInternal(item.attendees?.find((attendee) => attendee.self)?.responseStatus);
     }
+
+    // Check status in attendees list if creator is there.
+    const selfAttendee = item.attendees?.find((attendee) => attendee.self);
+    if (selfAttendee) {
+      return CalendarEntry.#responseStatusToInternal(selfAttendee.responseStatus);
+    }
+
+    // If not found accept own events.
+    if (item.creator?.self) {
+      return 'accepted';
+    }
+
+    return 'maybe';
   }
 
   static #responseStatusToInternal(

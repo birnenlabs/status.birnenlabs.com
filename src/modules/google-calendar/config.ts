@@ -14,6 +14,9 @@ Then copy the client Id and client Secret to the settings.
 
 Refresh status bar and click the link to start OAuth flow.
 
+Note: if you use Calendar Module then you can reuse the client Id and client Secret, please make
+      sure to enable the Google Calendar API.
+
 If authentication stopped working or you want to change the scope after calendar was initialised, the easiest way is to increase the "oauthSettingsVersion" value, which will force reauthentication.
 `;
 
@@ -30,8 +33,6 @@ export const DEFAULT_CONFIG: DefaultConfig = {
     clientSecret: 'Copied from the Google Cloud Console.',
     sourceCalendars:
       'Comma separated listof calendars to display in status bar, "primary" can be used to select the default calendar of authenticated user.',
-    destinationCalendar:
-      'Calendar id, where non declined events the first calendar in the sourceCalendars list will be copied. If set, the scope has to be "https://www.googleapis.com/auth/calendar.events".',
     requiredLocationPrefix:
       "Comma separated list of locations prefixes (it should correspond to the list of source calendars - one prefix per calendar). When set and the event in the corresponding calendar is accepted and doesn't have room booked with this prefix, it will be highlighted in the UI.",
   },
@@ -41,7 +42,6 @@ export const DEFAULT_CONFIG: DefaultConfig = {
     clientId: '',
     clientSecret: '',
     sourceCalendars: 'primary',
-    destinationCalendar: '',
     requiredLocationPrefix: '',
   },
 };
