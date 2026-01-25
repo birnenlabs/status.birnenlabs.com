@@ -106,8 +106,15 @@ function renderError(moduleName: string, error: Error): void {
     parentEl.appendChild(document.createElement('span'));
   }
 
-  const el = parentEl.children[0] as HTMLElement;
+  while (parentEl.childElementCount > 1) {
+    if (parentEl.lastChild) {
+      parentEl.removeChild(parentEl.lastChild);
+    }
+  }
+
+  const el = parentEl.lastChild as HTMLElement;
   el.className = 'box error';
+  el.onclick = null;
   setElement(el, error.message, '');
 }
 
