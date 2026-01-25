@@ -1,8 +1,8 @@
 import {ScheduledModuleInterface, RefreshResult, RefreshResultItem, DefaultConfig} from '../interface';
-import {OAuth} from '../../lib/oauth';
+import {launchOAuthPopup, OAuth, OAuthSettings} from '../../lib/oauth';
 import {TasksConnector, TaskItem} from './connector';
-import {processOAuth} from '../google-calendar/oauth';
 import {DEFAULT_CONFIG} from './config';
+import {upsertOAuthSettingsForGoogle} from '../../lib/oauth-defaults';
 
 const CSS = [
   {
@@ -16,42 +16,51 @@ const CSS = [
 ];
 
 export class GoogleTasksModule extends ScheduledModuleInterface {
-  private connector?: TasksConnector;
-  private errorMessage: string;
   private listIds: string[];
+  private oAuthSettings: OAuthSettings | undefined;
 
   constructor() {
     super(12, CSS);
 
-    this.errorMessage = 'Configuration was not set.';
     this.listIds = [];
   }
 
-  override async refresh(forced: boolean): Promise<RefreshResult> {
+  override refresh(forced: boolean): RefreshResult | Promise<RefreshResult> {
     const midnightToday = new Date();
     midnightToday.setHours(0, 0, 0, 0);
 
-    if (this.connector) {
-      console.groupCollapsed(
-        `GoogleTasksModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`,
-      );
-      const timeConsole = 'GoogleTasksModule.refresh';
-      console.time(timeConsole);
+    if (!this.oAuthSettings) {
+      return Promise.reject(new Error('Configuration was not set.'));
+    }
 
-      try {
-        const tasks = await Promise.all(this.listIds.map((listId) => this.connector!.retrieveData(listId)));
-        const items = tasks
+    if (!this.oAuthSettings.isInitialised()) {
+      return Promise.reject(new Error('Scope, clientId or clientSecret is not set. Please go to the settings page.'));
+    }
+
+    if (!this.oAuthSettings.hasRefreshToken()) {
+      return {
+        items: [{value: 'Click to authenticate', onclick: () => launchOAuthPopup(this.oAuthSettings!)}],
+        // Force refresh every 2 seconds.
+        forceNextRefreshTs: new Date().getTime() / 1000 + 2,
+      };
+    }
+
+    console.groupCollapsed(
+      `GoogleTasksModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`,
+    );
+    const connector = new TasksConnector(new OAuth(this.oAuthSettings));
+    const timeConsole = 'GoogleTasksModule.refresh';
+    console.time(timeConsole);
+    return Promise.all(this.listIds.map((listId) => connector.retrieveData(listId)))
+      .then((tasks) =>
+        tasks
           .flat()
           .sort(compareTaskItem)
-          .map((task: TaskItem) => this.taskItemToRefreshResultItem(task, midnightToday));
-        return {items};
-      } finally {
-        console.groupEnd();
-        console.timeEnd(timeConsole);
-      }
-    } else {
-      return Promise.reject(new Error(this.errorMessage));
-    }
+          .map((task) => this.taskItemToRefreshResultItem(task, midnightToday)),
+      )
+      .then((items) => ({items}))
+      .finally(() => console.groupEnd())
+      .finally(() => console.timeEnd(timeConsole));
   }
 
   private taskItemToRefreshResultItem(taskItem: TaskItem, midnightToday: Date): RefreshResultItem {
@@ -69,14 +78,13 @@ export class GoogleTasksModule extends ScheduledModuleInterface {
 
   override setConfig(config: {[key: string]: string}): void {
     this.listIds = config['listIds']?.split(',').filter((i) => i) ?? [];
-    const oAuthOrError = processOAuth(this, config);
-    if (oAuthOrError instanceof OAuth) {
-      this.connector = new TasksConnector(oAuthOrError);
-      this.errorMessage = '';
-    } else {
-      this.connector = undefined;
-      this.errorMessage = oAuthOrError;
-    }
+    this.oAuthSettings = upsertOAuthSettingsForGoogle(
+      this.name,
+      config['oauthSettingsVersion'] || '',
+      config['scope'] || '',
+      config['clientId'] || '',
+      config['clientSecret'] || '',
+    );
   }
 }
 

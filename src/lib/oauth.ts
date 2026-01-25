@@ -1,5 +1,4 @@
 const oauthStateParam = 'state';
-const oauthCodeParam = 'code';
 
 interface AccessToken {
   code: string;
@@ -29,9 +28,7 @@ interface OAuthSettingsData {
 }
 
 /**
- *
- * @param settings Function will st
- * @returns
+ * This function will open new popup window and will start OAuth flow.
  */
 export function launchOAuthPopup(settings: OAuthSettings): void {
   const authUrl = settings.createOAuthUrl();
@@ -87,59 +84,6 @@ export function launchOAuthPopup(settings: OAuthSettings): void {
     window.removeEventListener('message', handleMessage);
     console.log('[launchOAuthPopup] Event listener removed after 60 seconds.');
   }, 60000);
-}
-
-/**
- * Helper method that should be invoked in the oauth redirect window.
- * The popup page needs to specify OAuthSettings name in 'state' get parameter.
- * This method will:
- *   - load the OAuthSettings
- *   - parse the returned oauth code from the url
- *   - request refresh token and save it in OAuthSettings
- *   - redirect back to the return url
- */
-export function processOAuthRedirect(): Promise<void> {
-  const url = new URL(window.location.href);
-  const name = url.searchParams.get(oauthStateParam);
-  if (!name) {
-    return Promise.reject(new Error(`Url missing param: ${oauthStateParam}`));
-  }
-
-  const s = new OAuthSettings(name);
-  if (!s.isInitialised()) {
-    return Promise.reject(new Error(`Settings ${s} should be initialised in processOAuthRedirect`));
-  }
-
-  const code = url.searchParams.get(oauthCodeParam);
-  if (!code) {
-    return Promise.reject(new Error(`Url missing param: ${oauthCodeParam}`));
-  }
-
-  const params: RequestInit = {
-    method: 'POST',
-    mode: 'cors',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(s.createRefreshTokenData(code)),
-  };
-
-  return fetch(s.getTokenUrl()!, params)
-    .then((response) => {
-      if (response.status != 200) {
-        throw new Error(`Cannot get token: url: ${s.getTokenUrl()}, response: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then((json: {refresh_token?: string}) => {
-      if (!json.refresh_token) {
-        throw new Error(`RefreshToken not found in response: ${JSON.stringify(json)}`);
-      }
-      s.setRefreshToken(json.refresh_token);
-      s.save();
-      if (s.getReturnUrl()) {
-        window.location.href = s.getReturnUrl()!;
-      }
-      return;
-    });
 }
 
 /**
@@ -279,24 +223,8 @@ export class OAuthSettings {
     console.log('OAuthSettings saved: ' + this);
   }
 
-  getName(): string {
-    return this.#name;
-  }
-
   getTokenUrl(): string | undefined {
     return this.#data.tokenUrl;
-  }
-
-  getClientId(): string | undefined {
-    return this.#data.clientId;
-  }
-
-  getClientSecret(): string | undefined {
-    return this.#data.clientSecret;
-  }
-
-  getReturnUrl(): string | undefined {
-    return this.#data.url;
   }
 
   hasRefreshToken(): boolean {

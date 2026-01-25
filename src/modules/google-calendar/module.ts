@@ -4,6 +4,7 @@ import {createRefreshResult, CSS} from './response_processor';
 import {combine} from '../../lib/promise';
 import {DEFAULT_CONFIG} from './config';
 import {OAuth, OAuthSettings, launchOAuthPopup} from '../../lib/oauth';
+import {upsertOAuthSettingsForGoogle} from '../../lib/oauth-defaults';
 
 // Force sync and render calendar once per 6 hours.
 const MAX_INTERVAL_BETWEEN_SYNC_MS = 21600000;
@@ -159,26 +160,12 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
     this.#sourceCalendars = config['sourceCalendars']?.split(',') || [];
     this.#destinationCalendar = config['destinationCalendar'] || '';
     this.#requiredLocationPrefix = config['requiredLocationPrefix']?.split(',') || [];
-    this.#oAuthSettings = this.#updateOAuthSettings(config);
-  }
-
-  /**
-   * OAuth config is stored separately by OAuth library. Sync it after config of
-   * this module was updated.
-   */
-  #updateOAuthSettings(config: Record<string, string>): OAuthSettings {
-    // Sync OAuth with the module settings
-    const oAuthSettings = new OAuthSettings(this.name + '-oauth-v' + config['oauthSettingsVersion']);
-    oAuthSettings.setOAuthUrl('https://accounts.google.com/o/oauth2/auth');
-    oAuthSettings.setTokenUrl('https://accounts.google.com/o/oauth2/token');
-    oAuthSettings.setRedirectUrl('https://birnenlabs.com/oauth/oauth.html');
-    oAuthSettings.setScope(config['scope'] || '');
-    oAuthSettings.setClientId(config['clientId'] || '');
-    oAuthSettings.setClientSecret(config['clientSecret'] || '');
-    // This is not important - we take the code using window postMessage.
-    oAuthSettings.setReturnUrl('https://birnenlabs.com');
-    oAuthSettings.save();
-
-    return oAuthSettings;
+    this.#oAuthSettings = upsertOAuthSettingsForGoogle(
+      this.name,
+      config['oauthSettingsVersion'] || '',
+      config['scope'] || '',
+      config['clientId'] || '',
+      config['clientSecret'] || '',
+    );
   }
 }
