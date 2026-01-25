@@ -64,7 +64,7 @@ function syncAndGetOAuthSettings(module: ModuleInterface, config: Record<string,
   oAuthSettings.setScope(config['scope'] || '');
   oAuthSettings.setClientId(config['clientId'] || '');
   oAuthSettings.setClientSecret(config['clientSecret'] || '');
-  oAuthSettings.setReturnUrl(window.location.href);
+  oAuthSettings.setReturnUrl('https://status.birnenlabs.com/settings.html');
   oAuthSettings.save();
 
   return oAuthSettings;

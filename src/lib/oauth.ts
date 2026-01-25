@@ -278,7 +278,7 @@ export class OAuthSettings {
   }
 
   /**
-   * Sets redirect url - usually url of the page - for this page use https://birnenlabs.com/oauth/popup.html
+   * Sets redirect url - usually url of the page - for this page use https://status.birnenlabs.com/oauth.html
    */
   setRedirectUrl(redirectUrl: string): void {
     this.#data.redirectUrl = redirectUrl;
