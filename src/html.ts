@@ -41,32 +41,55 @@ export function render(moduleName: string, itemsOrError: RefreshResultItem[] | E
 
 function renderItems(moduleName: string, items: RefreshResultItem[]): void {
   const parentEl = document.getElementById(moduleName) as HTMLDivElement;
-  const newChildren: Node[] = [];
 
-  items.forEach((item, i) => {
-    const el = document.createElement('span');
+  // Expected elements with the separators between.
+  const expectedElementsCount = Math.max(2 * items.length - 1, 0);
 
-    el.className = item.classNames ? item.classNames.map((c: string) => generateCssName(moduleName, c)).join(' ') : '';
+  if (parentEl.childElementCount !== expectedElementsCount) {
+    console.log(
+      `Adjusting DOM: ChildElementCount (${parentEl.childElementCount}) doesn't match items size (${items.length}), expected count with separators: ${expectedElementsCount}`,
+    );
+
+    while (parentEl.childElementCount < expectedElementsCount) {
+      const childEl = document.createElement('span');
+      if (parentEl.childElementCount % 2 === 1) {
+        childEl.textContent = SEP;
+      }
+      parentEl.appendChild(childEl);
+    }
+
+    while (parentEl.childElementCount > expectedElementsCount) {
+      if (parentEl.lastChild) {
+        parentEl.removeChild(parentEl.lastChild);
+      }
+    }
+  }
+
+  for (let i = 0; i < items.length; i++) {
+    const el = parentEl.children[2 * i] as HTMLElement;
+    const item = items[i]!;
+
+    el.className = item.classNames
+      ? item.classNames.map((className: string) => generateCssName(moduleName, className)).join(' ')
+      : '';
     el.classList.add('box');
-    el.classList.toggle('urgent', !!item.urgent);
-    el.classList.toggle('important', !!item.important && !item.urgent);
-    el.classList.toggle('link', !!item.onclick);
+
+    if (item.urgent) {
+      el.classList.add('urgent');
+    } else if (item.important) {
+      el.classList.add('important');
+    }
 
     if (item.onclick) {
+      el.classList.add('link');
       el.onclick = item.onclick;
+    } else {
+      el.removeAttribute('onclick');
+      el.classList.remove('link');
     }
 
     setElement(el, item.value, item.extendedValue);
-    newChildren.push(el);
-
-    if (i < items.length - 1) {
-      const sep = document.createElement('span');
-      sep.textContent = SEP;
-      newChildren.push(sep);
-    }
-  });
-
-  parentEl.replaceChildren(...newChildren);
+  }
 
   const display = items.length === 0 ? 'none' : '';
   parentEl.style.display = display;
@@ -79,16 +102,13 @@ function renderItems(moduleName: string, items: RefreshResultItem[]): void {
 function renderError(moduleName: string, error: Error): void {
   const parentEl = document.getElementById(moduleName) as HTMLElement;
 
-  parentEl.style.display = '';
-  const sepEl = document.getElementById(`${moduleName}-sep`);
-  if (sepEl) {
-    sepEl.style.display = '';
+  if (!parentEl.hasChildNodes()) {
+    parentEl.appendChild(document.createElement('span'));
   }
 
-  const el = document.createElement('span');
+  const el = parentEl.children[0] as HTMLElement;
   el.className = 'box error';
   setElement(el, error.message, '');
-  parentEl.replaceChildren(el);
 }
 
 function setElement(el: HTMLElement, text: string, extension: string | string[] | undefined): void {
