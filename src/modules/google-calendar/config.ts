@@ -1,3 +1,4 @@
+import {OAUTH_REDIRECT_URL_GOOGLE} from '../../lib/oauth-defaults';
 import {DefaultConfig} from '../interface';
 
 const CONFIG_HELP = `
@@ -8,7 +9,7 @@ In order to start using calendar, you need to create OAuth settings:
 Open the Google Cloud console (https://console.cloud.google.com) and create OAuth credentials:
     - Type: Web application
     - Authorised JavaScript origins: https://status.birnenlabs.com
-    - Authorised redirect URIs: https://status.birnenlabs.com/oauth.html
+    - Authorised redirect URIs: ${OAUTH_REDIRECT_URL_GOOGLE}
     - Enable Google Calendar API
 Then copy the client Id and client Secret to the settings.
 

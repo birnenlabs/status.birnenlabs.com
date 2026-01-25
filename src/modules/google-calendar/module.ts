@@ -44,7 +44,13 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
 
     if (!this.#oAuthSettings.hasRefreshToken()) {
       return {
-        items: [{value: 'Click to authenticate', onclick: () => launchOAuthPopup(this.#oAuthSettings!)}],
+        items: [
+          {
+            value: 'Click to authenticate',
+            onclick: () => launchOAuthPopup(this.#oAuthSettings!),
+            classNames: ['clickOAuth'],
+          },
+        ],
         // Force refresh every 2 seconds.
         forceNextRefreshTs: new Date().getTime() / 1000 + 2,
       };

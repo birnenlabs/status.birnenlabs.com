@@ -28,6 +28,11 @@ export const CSS = [
     className: 'calendarItem-accepted,calendarItem-missingRoom',
     color: '#ffd580',
   },
+  {
+    className: 'clickOAuth',
+    color: 'black',
+    backgroundColor: '#ffd580',
+  },
 ];
 
 /**

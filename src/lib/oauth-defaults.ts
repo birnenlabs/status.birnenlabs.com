@@ -1,5 +1,7 @@
 import {OAuthSettings} from './oauth';
 
+export const OAUTH_REDIRECT_URL_GOOGLE = 'https://birnenlabs.com/oauth/oauth.html';
+
 /**
  * Upserts OAuth settings for Google.
  *
@@ -21,7 +23,7 @@ export function upsertOAuthSettingsForGoogle(
   const oAuthSettings = new OAuthSettings(name + '-oauth-v' + version);
   oAuthSettings.setOAuthUrl('https://accounts.google.com/o/oauth2/auth');
   oAuthSettings.setTokenUrl('https://accounts.google.com/o/oauth2/token');
-  oAuthSettings.setRedirectUrl('https://birnenlabs.com/oauth/oauth.html');
+  oAuthSettings.setRedirectUrl(OAUTH_REDIRECT_URL_GOOGLE);
   oAuthSettings.setScope(scope);
   oAuthSettings.setClientId(clientId);
   oAuthSettings.setClientSecret(clientSecret);

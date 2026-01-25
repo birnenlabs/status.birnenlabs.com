@@ -1,3 +1,4 @@
+import {OAUTH_REDIRECT_URL_GOOGLE} from '../../lib/oauth-defaults';
 import {DefaultConfig} from '../interface';
 
 const CONFIG_HELP = `
@@ -17,7 +18,7 @@ In order to start using tasks, you need to complete the following steps:
 Open the Google Cloud console (https://console.cloud.google.com) and create OAuth credentials:
     - Type: Web application
     - Authorised JavaScript origins: https://status.birnenlabs.com
-    - Authorised redirect URIs: https://status.birnenlabs.com/oauth.html
+    - Authorised redirect URIs: ${OAUTH_REDIRECT_URL_GOOGLE}
     - Enable Google Tasks API
 Then copy the client Id and client Secret to the settings.
 

@@ -13,6 +13,11 @@ const CSS = [
     className: 'today',
     color: '#ffd580',
   },
+  {
+    className: 'clickOAuth',
+    color: 'black',
+    backgroundColor: '#ffd580',
+  },
 ];
 
 export class GoogleTasksModule extends ScheduledModuleInterface {
@@ -39,7 +44,13 @@ export class GoogleTasksModule extends ScheduledModuleInterface {
 
     if (!this.oAuthSettings.hasRefreshToken()) {
       return {
-        items: [{value: 'Click to authenticate', onclick: () => launchOAuthPopup(this.oAuthSettings!)}],
+        items: [
+          {
+            value: 'Click to authenticate',
+            onclick: () => launchOAuthPopup(this.oAuthSettings!),
+            classNames: ['clickOAuth'],
+          },
+        ],
         // Force refresh every 2 seconds.
         forceNextRefreshTs: new Date().getTime() / 1000 + 2,
       };
