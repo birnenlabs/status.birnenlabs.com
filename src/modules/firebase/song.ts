@@ -32,9 +32,14 @@ export class SongModule extends FirebaseBaseModule {
 
   protected override _onValue(data: unknown): RefreshResultItem[] {
     const song = data as Song;
-    const nowTimestampMin = Math.floor(Date.now() / 60000);
 
-    if (song?.title && (nowTimestampMin - (song?.timestampMin || 0)) <= 1) {
+    // Timestamp is not used for now (The extension is using timestamp on its side but it should take care of updating database).
+    // I need to create a better fix with some kind of longer auto expire.
+    // const nowTimestampMin = Math.floor(Date.now() / 60000);
+
+    const showSong = !!data?.title;
+    
+    if (showSong) {
       const titleSplit = song.title.split(' ').filter((i) => i);
       // Let's display at most 5 words from the title.
       const split = titleSplit.length > 6;
