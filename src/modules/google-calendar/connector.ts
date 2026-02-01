@@ -18,16 +18,12 @@ export class CalendarConnector {
   }
 
   retrieveData(calendarId: string): Promise<CalendarResult> {
-    return this.#retrieveDataWithRetry(calendarId);
-  }
-
-  #retrieveDataWithRetry(calendarId: string, isItSecondTry = false): Promise<CalendarResult> {
-    const consoleTimeId = `CalendarControllerRetriever.retrieveDataWithRetry ${new Date().toLocaleTimeString([], {timeStyle: 'short'})} calendarId=${calendarId} isItSecondTry=${isItSecondTry}`;
+    const consoleTimeId = `CalendarControllerRetriever.retrieveData ${new Date().toLocaleTimeString([], {timeStyle: 'short'})} calendarId=${calendarId}`;
     console.time(consoleTimeId);
 
     return (
       this.#oAuth
-        .getAccessToken(/* use isItSecondTry flag to force refresh on second try*/ isItSecondTry)
+        .getAccessToken()
         // Using '0' as minus days to properly synchronize daily recurring events.
         // If it was set to 1, we would take the daily event from yesterday and only first recurring event
         // instance is synchronized.
@@ -35,11 +31,9 @@ export class CalendarConnector {
         .then((response) =>
           response.status == 200
             ? response.json().then((json) => new CalendarResult(json, calendarId))
-            : isItSecondTry
-              ? response
-                  .text()
-                  .then((text) => new CalendarResult({} as CalendarApiResponse, calendarId, 'Error: ' + text))
-              : this.#retrieveDataWithRetry(calendarId, true),
+            : response
+                .text()
+                .then((text) => new CalendarResult({} as CalendarApiResponse, calendarId, 'Error: ' + text)),
         )
         .finally(() => console.timeEnd(consoleTimeId))
     );

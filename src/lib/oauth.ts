@@ -93,22 +93,23 @@ export function launchOAuthPopup(settings: OAuthSettings): void {
  */
 export class OAuth {
   #settings: OAuthSettings;
-  #accessToken: string | undefined;
+  #accessToken: string;
+  #tokenExpirationMs: number;
 
   constructor(settings: OAuthSettings) {
     console.log('OAuth created');
     this.#settings = settings;
+    this.#accessToken = '';
+    this.#tokenExpirationMs = 0;
   }
 
-  getAccessToken(forceRefresh = false): Promise<string> {
+  getAccessToken(): Promise<string> {
     if (!this.#settings.hasRefreshToken()) {
       return Promise.reject(new Error('Missing token - Access not granted, please initialise OAuth'));
     }
 
-    if (forceRefresh) {
-      this.#accessToken = undefined;
-    }
-    if (this.#accessToken) {
+    // Return token if it is not expired and won't expire in 30 seconds.
+    if (this.#accessToken && Date.now() < this.#tokenExpirationMs - 30000) {
       return Promise.resolve(this.#accessToken);
     }
 
@@ -124,27 +125,28 @@ export class OAuth {
       body: JSON.stringify(accessTokenData),
     };
     return fetch(this.#settings.getTokenUrl()!, params)
-      .then((response) =>
-        response.status == 200
-          ? response
-          : this.#throwError(
-              `Cannot get access token: url: ${this.#settings.getTokenUrl()}, response: ${response.status}`,
-            ),
-      )
+      .then((response) => {
+        switch (response.status) {
+          case 200:
+            return response;
+          case 400:
+            this.#settings.setRefreshToken('');
+            this.#settings.save();
+            throw new Error('Non retriable error, RefreshToken removed');
+          default:
+            throw new Error(`Error ${response.status}.`);
+        }
+      })
       .then((response) => response.json())
-      .then((json: {access_token?: string}) =>
-        json.access_token
-          ? (this.#accessToken = json.access_token)
-          : this.#throwError(`AccessToken not found in response: ${JSON.stringify(json)}`),
-      );
-  }
-
-  #throwError(message: string): never {
-    console.error(message);
-    console.error('Removing RefreshToken.');
-    this.#settings.setRefreshToken('');
-    this.#settings.save();
-    throw new Error(message);
+      .then((json: {access_token?: string; expires_in?: number}) => {
+        if (json.access_token) {
+          this.#accessToken = json.access_token;
+          this.#tokenExpirationMs = Date.now() + (json.expires_in || 1800) * 1000;
+          return this.#accessToken;
+        } else {
+          throw new Error(`AccessToken not found: ${JSON.stringify(json)}`);
+        }
+      });
   }
 }
 

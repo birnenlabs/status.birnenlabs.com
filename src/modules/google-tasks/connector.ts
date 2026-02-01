@@ -19,25 +19,14 @@ export class TasksConnector {
     if (!listId) {
       return Promise.reject(new Error('List id cannot be empty.'));
     }
-    return this.#retrieveDataWithRetry(listId);
-  }
 
-  #retrieveDataWithRetry(listId: string, isItSecondTry = false): Promise<TaskItem[]> {
-    const consoleTimeId = `TasksConnector.retrieveDataWithRetry ${new Date().toLocaleTimeString([], {timeStyle: 'short'})} listId=${listId} isItSecondTry=${isItSecondTry}`;
+    const consoleTimeId = `TasksConnector.retrieveData ${new Date().toLocaleTimeString([], {timeStyle: 'short'})} listId=${listId}`;
     console.time(consoleTimeId);
 
     return this.#oAuth
-      .getAccessToken(/* use isItSecondTry flag to force refresh on second try*/ isItSecondTry)
+      .getAccessToken()
       .then((accessToken) => this.#fetchTasks(accessToken, listId))
-      .then((response) => {
-        if (response.status == 200) {
-          return this.#processSuccess(response);
-        }
-        if (!isItSecondTry) {
-          return this.#retrieveDataWithRetry(listId, true);
-        }
-        return this.#processFailure(response);
-      })
+      .then((response) => (response.status == 200 ? this.#processSuccess(response) : this.#processFailure(response)))
       .finally(() => console.timeEnd(consoleTimeId));
   }
 
