@@ -1,12 +1,10 @@
 import {ScheduledModuleInterface, RefreshResult, DefaultConfig} from '../interface';
-import {CalendarConnector, CalendarResult} from './connector';
+import {CalendarConnector} from './connector';
 import {createRefreshResult, CSS} from './response_processor';
 import {DEFAULT_CONFIG} from './config';
 import {OAuth, OAuthSettings, launchOAuthPopup} from '../../lib/oauth';
 import {upsertOAuthSettingsForGoogle} from '../../lib/oauth-defaults';
 
-// Force sync and render calendar once per 6 hours.
-const MAX_INTERVAL_BETWEEN_SYNC_MS = 21600000;
 
 /**
  * Implements ScheduledModuleInterface
@@ -15,7 +13,6 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
   #oAuthSettings: OAuthSettings | undefined;
   #sourceCalendars: string[];
   #requiredLocationPrefix: string[];
-  #lastRenderMillis: number = 0;
 
   constructor() {
     // Let's repeat every 4 minuts - it will not interfere with the usual scheduling
@@ -33,12 +30,10 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
 
   override refresh(forced: boolean): Promise<RefreshResult> | RefreshResult {
     if (!this.#oAuthSettings) {
-      this.#lastRenderMillis = 0;
       return Promise.reject(new Error('Configuration was not set.'));
     }
 
     if (!this.#oAuthSettings.isInitialised()) {
-      this.#lastRenderMillis = 0;
       return Promise.reject(new Error('Scope, clientId or clientSecret is not set. Please go to the settings page.'));
     }
 
@@ -56,50 +51,20 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
       };
     }
 
-    // Everything was checked, we can now proceed.
-    // Creating connector is inexpensive - it only sets proper references inside.
-    const connector = new CalendarConnector(new OAuth(this.#oAuthSettings));
     console.groupCollapsed(
       `CalendarModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`,
     );
-    const timeSync = 'CalendarModule.refresh: sync time';
+    // Everything was checked, we can now proceed.
+    // Creating connector is inexpensive - it only sets proper references inside.
+    const connector = new CalendarConnector(new OAuth(this.#oAuthSettings));
     const timeRender = 'CalendarModule.refresh: retrieve time';
-    console.time(timeSync);
     console.time(timeRender);
 
     return Promise.all(this.#sourceCalendars.map((calendarId) => connector.retrieveData(calendarId)))
-      .then((results) => this.#createRefreshResult(results, forced))
-      .catch((err: Error) => {
-        // If error is thrown from this method, it will be rendered. Reset the last render to force it during the next update.
-        this.#lastRenderMillis = 0;
-        throw err;
-      })
+      .then((results) => results.flat())
+      .then((entries) => createRefreshResult(entries, this.#sourceCalendars, this.#requiredLocationPrefix))
       .finally(() => console.timeEnd(timeRender))
       .finally(() => console.groupEnd());
-  }
-
-  #createRefreshResult(calendarResults: CalendarResult[], forced: boolean): RefreshResult | Promise<RefreshResult> {
-    const errorResult = calendarResults.find((calendarResult) => calendarResult.hasError());
-    if (errorResult) {
-      return Promise.reject(new Error(errorResult.getError()));
-    }
-
-    const nowMillis = new Date().getTime();
-    if (!forced) {
-      const lastUpdateMillis = Math.max(
-        ...calendarResults.map((calendarResult) => calendarResult.getLastUpdateMillis()),
-      );
-      if (
-        nowMillis - this.#lastRenderMillis < MAX_INTERVAL_BETWEEN_SYNC_MS &&
-        this.#lastRenderMillis > lastUpdateMillis
-      ) {
-        console.log(`Skipping render, last rendered at: ${new Date(this.#lastRenderMillis).toLocaleString('sv')}`);
-        return {skipHtmlUpdate: true, items: []};
-      }
-    }
-    this.#lastRenderMillis = nowMillis;
-    const entries = calendarResults.flatMap((calendarResult) => calendarResult.getCalendarEntries());
-    return createRefreshResult(entries, this.#sourceCalendars, this.#requiredLocationPrefix);
   }
 
   override getDefaultConfig(): DefaultConfig {

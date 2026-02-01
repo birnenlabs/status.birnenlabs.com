@@ -1,11 +1,6 @@
 import {OAuth} from '../../lib/oauth';
 import {CalendarEntry, CalendarApiItem} from './calendar_entry';
 
-interface CalendarApiResponse {
-  updated: string;
-  items: CalendarApiItem[];
-}
-
 /**
  * Calendar connector class
  */
@@ -17,7 +12,7 @@ export class CalendarConnector {
     this.#oAuth = oAuth;
   }
 
-  retrieveData(calendarId: string): Promise<CalendarResult> {
+  retrieveData(calendarId: string): Promise<CalendarEntry[]> {
     const consoleTimeId = `CalendarControllerRetriever.retrieveData ${new Date().toLocaleTimeString([], {timeStyle: 'short'})} calendarId=${calendarId}`;
     console.time(consoleTimeId);
 
@@ -29,14 +24,23 @@ export class CalendarConnector {
         // instance is synchronized.
         .then((accessToken) => this.#fetchEvents(accessToken, 0, 1, calendarId))
         .then((response) =>
-          response.status == 200
-            ? response.json().then((json) => new CalendarResult(json, calendarId))
-            : response
-                .text()
-                .then((text) => new CalendarResult({} as CalendarApiResponse, calendarId, 'Error: ' + text)),
+          response.status == 200 ? this.#processSuccess(response, calendarId) : this.#processFailure(response),
         )
         .finally(() => console.timeEnd(consoleTimeId))
     );
+  }
+
+  #processSuccess(response: Response, calendarId: string): Promise<CalendarEntry[]> {
+    return response
+      .json()
+      .then((json) => json.items)
+      .then((items) => items.map((item: CalendarApiItem) => new CalendarEntry(item, calendarId)));
+  }
+
+  #processFailure(response: Response): Promise<CalendarEntry[]> {
+    return response.text().then((text) => {
+      throw new Error(text);
+    });
   }
 
   #fetchEvents(accessToken: string, minusDays: number, plusDays: number, calendarName: string): Promise<Response> {
@@ -63,43 +67,3 @@ export class CalendarConnector {
   }
 }
 
-/**
- * Calendar result
- */
-export class CalendarResult {
-  #calendarEntries: CalendarEntry[];
-  #lastUpdateMillis: number;
-  #errorMessage: string;
-
-  constructor(json: CalendarApiResponse, calendarId: string, errorMessage = '') {
-    if (errorMessage === '') {
-      this.#calendarEntries = json.items.map((item) => new CalendarEntry(item, calendarId));
-      this.#lastUpdateMillis = new Date(json.updated).getTime();
-    } else {
-      this.#calendarEntries = [];
-      this.#lastUpdateMillis = -1;
-    }
-
-    this.#errorMessage = errorMessage;
-  }
-
-  hasError(): boolean {
-    return this.#errorMessage != '';
-  }
-
-  getError(): string {
-    return this.#errorMessage;
-  }
-
-  getCalendarEntries(): CalendarEntry[] {
-    return this.#calendarEntries;
-  }
-
-  getLastUpdateMillis(): number {
-    return this.#lastUpdateMillis;
-  }
-
-  toString(): string {
-    return `lastUpdate: ${new Date(this.#lastUpdateMillis).toLocaleString('sv')}, #entries: ${this.#calendarEntries.length}, error: ${this.#errorMessage || '<null>'}`;
-  }
-}
