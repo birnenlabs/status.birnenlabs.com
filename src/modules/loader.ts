@@ -117,7 +117,7 @@ class ErrorModule extends ScheduledModuleInterface {
     this.#error = error;
   }
 
-  override refresh(_: boolean): RefreshResult {
+  override refresh(): RefreshResult {
     throw this.#error;
   }
 

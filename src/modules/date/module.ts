@@ -11,8 +11,8 @@ export class DateModule extends ScheduledModuleInterface {
     super(24 * 60);
   }
 
-  override refresh(forced: boolean): RefreshResult {
-    console.log(forced);
+  override refresh(): RefreshResult {
+    console.log('DateModule.refresh()');
     const now = new Date();
     return {
       items: [

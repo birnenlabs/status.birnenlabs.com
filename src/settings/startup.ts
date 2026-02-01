@@ -153,7 +153,7 @@ function createSectionHtml(module: ModuleInterface): HTMLElement {
     testButtonEl.onclick = () =>
       Promise.resolve()
         .then(() => (testSectionEl.style.display = ''))
-        .then(() => (module as ScheduledModuleInterface).refresh(true))
+        .then(() => (module as ScheduledModuleInterface).refresh())
         .then((r) => (testOutputEl.textContent = resultToString(r)))
         .catch((err) => (testOutputEl.textContent = err.toString()));
   } else if (module instanceof PushModuleInterface) {

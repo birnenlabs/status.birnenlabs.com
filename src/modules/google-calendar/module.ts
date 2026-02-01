@@ -5,7 +5,6 @@ import {DEFAULT_CONFIG} from './config';
 import {OAuth, OAuthSettings, launchOAuthPopup} from '../../lib/oauth';
 import {upsertOAuthSettingsForGoogle} from '../../lib/oauth-defaults';
 
-
 /**
  * Implements ScheduledModuleInterface
  */
@@ -28,7 +27,7 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
     this.#requiredLocationPrefix = [];
   }
 
-  override refresh(forced: boolean): Promise<RefreshResult> | RefreshResult {
+  override refresh(): Promise<RefreshResult> | RefreshResult {
     if (!this.#oAuthSettings) {
       return Promise.reject(new Error('Configuration was not set.'));
     }
@@ -51,9 +50,7 @@ export class GoogleCalendarModule extends ScheduledModuleInterface {
       };
     }
 
-    console.groupCollapsed(
-      `CalendarModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`,
-    );
+    console.groupCollapsed(`CalendarModule.refresh() ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`);
     // Everything was checked, we can now proceed.
     // Creating connector is inexpensive - it only sets proper references inside.
     const connector = new CalendarConnector(new OAuth(this.#oAuthSettings));

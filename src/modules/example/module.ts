@@ -35,8 +35,8 @@ export class ExampleScheduledModule extends ScheduledModuleInterface {
     super(0, CSS);
   }
 
-  override refresh(forced: boolean): Promise<RefreshResult> {
-    const consoleLog = `ExampleModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`;
+  override refresh(): Promise<RefreshResult> {
+    const consoleLog = `ExampleModule.refresh() ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`;
     console.time(consoleLog);
     console.groupCollapsed(consoleLog);
 

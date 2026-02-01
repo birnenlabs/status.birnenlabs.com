@@ -30,7 +30,7 @@ export class GoogleTasksModule extends ScheduledModuleInterface {
     this.listIds = [];
   }
 
-  override refresh(forced: boolean): RefreshResult | Promise<RefreshResult> {
+  override refresh(): RefreshResult | Promise<RefreshResult> {
     const midnightToday = new Date();
     midnightToday.setHours(0, 0, 0, 0);
 
@@ -56,9 +56,7 @@ export class GoogleTasksModule extends ScheduledModuleInterface {
       };
     }
 
-    console.groupCollapsed(
-      `GoogleTasksModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`,
-    );
+    console.groupCollapsed(`GoogleTasksModule.refresh() ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`);
     const connector = new TasksConnector(new OAuth(this.oAuthSettings));
     const timeConsole = 'GoogleTasksModule.refresh';
     console.time(timeConsole);

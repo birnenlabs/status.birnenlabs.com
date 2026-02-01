@@ -66,4 +66,3 @@ export class CalendarConnector {
     return fetch(url, params);
   }
 }
-

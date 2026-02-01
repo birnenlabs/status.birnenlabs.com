@@ -70,8 +70,8 @@ export class ScheduledModuleInterface extends ModuleInterface {
     this.repeatMin = repeatMin;
   }
 
-  refresh(forced = false): RefreshResult | Promise<RefreshResult> {
-    throw new Error(`${this.name}: refresh() not implemented ${forced}`);
+  refresh(): RefreshResult | Promise<RefreshResult> {
+    throw new Error(`${this.name}: refresh() not implemented`);
   }
 }
 

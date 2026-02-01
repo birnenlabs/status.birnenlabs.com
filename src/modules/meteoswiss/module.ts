@@ -34,8 +34,8 @@ export class MeteoSwissModule extends ScheduledModuleInterface {
     super(20, MeteoSwissModule.#createCss(DEFAULT_RAIN_COLOR));
   }
 
-  public override refresh(forced: boolean): Promise<RefreshResult> {
-    const consoleLog = `MeteoSwissModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`;
+  public override refresh(): Promise<RefreshResult> {
+    const consoleLog = `MeteoSwissModule.refresh() ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`;
     if (this.#meteoSwissLib === undefined) {
       const err = new Error('Config is not set.');
       console.error(err);

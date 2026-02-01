@@ -53,12 +53,11 @@ export class OpenMeteoModule extends ScheduledModuleInterface {
   }
 
   /**
-   * @param {boolean} forced
    * @return {Promise<RefreshResult>}
    */
-  override refresh(forced: boolean): Promise<RefreshResult> {
+  override refresh(): Promise<RefreshResult> {
     if (this.#url) {
-      const consoleLog = `OpenMeteoModule.refresh(${forced}) ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`;
+      const consoleLog = `OpenMeteoModule.refresh() ${new Date().toLocaleTimeString([], {timeStyle: 'short'})}`;
       console.time(consoleLog);
       console.groupCollapsed(consoleLog);
 

@@ -2,15 +2,11 @@ import {PushModuleInterface, ScheduledModuleInterface, RefreshResult, RenderHtml
 import {Event} from '../lib/scheduler';
 import {combine} from '../lib/promise';
 
-function render(
-  module: ScheduledModuleInterface,
-  renderHtmlCallback: RenderHtmlCallback,
-  forced: boolean = false,
-): Promise<any> {
+function render(module: ScheduledModuleInterface, renderHtmlCallback: RenderHtmlCallback): Promise<any> {
   // Don't use Promise.resolve() as moduleRefresh can throw an exception.
   // In this case Promise.resolve(module.refresh()) would never start promise chain
   // and immediatelly fail.
-  const refreshResultPromise: Promise<RefreshResult> = new Promise((resolve) => resolve(module.refresh(forced)));
+  const refreshResultPromise: Promise<RefreshResult> = new Promise((resolve) => resolve(module.refresh()));
 
   const renderResultPromise = refreshResultPromise
     .then((refreshResult) => (refreshResult.skipHtmlUpdate ? undefined : refreshResult.items))
@@ -26,7 +22,7 @@ function render(
     refreshResult.forceNextRefreshTs
       ? Event.at(
           `${module.name}-forcedUpdate`,
-          () => render(module, renderHtmlCallback, true),
+          () => render(module, renderHtmlCallback),
           refreshResult.forceNextRefreshTs,
         )
       : undefined,
@@ -41,9 +37,9 @@ export function initModuleRenderer(
     module.setCallback(renderHtmlCallback);
     return Promise.resolve();
   } else if (module instanceof ScheduledModuleInterface) {
-    Event.repeat(module.name, () => render(module, renderHtmlCallback, false), module.repeatMin);
+    Event.repeat(module.name, () => render(module, renderHtmlCallback), module.repeatMin);
     return (
-      render(module, renderHtmlCallback, true)
+      render(module, renderHtmlCallback)
         // catch an error here. The error is already rendered.
         .catch((err) => console.warn(`Could not render module: ${module.name}`, err))
     );

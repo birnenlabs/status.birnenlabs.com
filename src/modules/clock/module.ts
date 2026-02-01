@@ -15,12 +15,12 @@ export class ClockModule extends ScheduledModuleInterface {
     super(0);
   }
 
-  override refresh(forced: boolean): RefreshResult {
+  override refresh(): RefreshResult {
     const now = new Date();
     const value = now.toLocaleTimeString([], {timeStyle: 'medium'});
     let extendedValue: string[] | undefined;
 
-    if (forced || now.getSeconds() === 0) {
+    if (now.getSeconds() === 0) {
       // Update other timezones too.
       extendedValue = this.#timezones.map((tz) => `${tz.label}: ${this.#timezoneOrError(now, tz.format)}`);
     }
