@@ -29,7 +29,7 @@ export class FirebaseBaseModule extends PushModuleInterface {
   #databasePath: string;
   #help: string;
   #unsubscribe: Unsubscribe;
-  #onValueTimeout: number | undefined;
+  #onValueTimeout: Timeout | undefined;
 
   constructor(databasePath: string, css: CustomCss[], help: string) {
     super([], css);
