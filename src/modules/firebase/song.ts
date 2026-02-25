@@ -4,7 +4,7 @@ import {FirebaseBaseModule} from './base';
 interface Song {
   title?: string;
   artist?: string;
-  timestampMin?: number;
+  timestamp_sec?: number;
 }
 
 const CSS: CustomCss[] = [
@@ -13,6 +13,8 @@ const CSS: CustomCss[] = [
     color: 'lightgreen',
   },
 ];
+
+const SONG_EXPIRE_SEC = 1800;
 
 const HELP = `
 The module is song that is currently playing.
@@ -33,9 +35,15 @@ export class SongModule extends FirebaseBaseModule {
   protected override _onValue(data: unknown): RefreshResultItem[] {
     const song = data as Song;
 
-    // Timestamp is not used for now (The extension is using timestamp on its side but it should take care of updating database).
-    // I need to create a better fix with some kind of longer auto expire.
-    // const nowTimestampMin = Math.floor(Date.now() / 60000);
+    // This is used only to filter out old data on startup (_onValue will only be invoked when the database has changed).
+    if (song.timestamp_sec) {
+      const nowTimestampSec = Math.floor(Date.now() / 1000);
+      if (nowTimestampSec - song.timestamp_sec > SONG_EXPIRE_SEC) {
+        console.log('SongModule onValue - expired song', song);
+        return [];
+      }
+    }
+    
     if (song.title) {
       const titleSplit = song.title.split(' ').filter((i) => i);
       // Let's display at most 5 words from the title.
@@ -48,7 +56,7 @@ export class SongModule extends FirebaseBaseModule {
         },
       ];
     } else {
-      console.log('SongModule onValue - expired or empty song', song);
+      console.log('SongModule onValue - empty song', song);
       return [];
     }
   }
