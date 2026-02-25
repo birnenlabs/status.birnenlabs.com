@@ -2,6 +2,8 @@ import {FirebaseApp, initializeApp} from 'firebase/app';
 import {DataSnapshot, getDatabase, onValue, ref, Unsubscribe} from 'firebase/database';
 import {CustomCss, DefaultConfig, PushModuleInterface, RefreshResultItem} from '../interface';
 
+const FORCE_REFRESH_TIMEOUT_MS = 600000;
+
 const HELP = `
 Required steps for the Firebase module to work:
 
@@ -27,6 +29,7 @@ export class FirebaseBaseModule extends PushModuleInterface {
   #databasePath: string;
   #help: string;
   #unsubscribe: Unsubscribe;
+  #onValueTimeout: number | undefined;
 
   constructor(databasePath: string, css: CustomCss[], help: string) {
     super([], css);
@@ -58,6 +61,7 @@ export class FirebaseBaseModule extends PushModuleInterface {
 
   override setConfig(config: Record<string, string>): void {
     this.#unsubscribe();
+    clearTimeout(this.#onValueTimeout);
     if (config['databaseUrl'] && config['databaseToken'] && config['databaseToken'].length >= 20) {
       const firebaseConfig = {databaseURL: config['databaseUrl']};
       try {
@@ -79,6 +83,11 @@ export class FirebaseBaseModule extends PushModuleInterface {
   }
 
   #onValue(data: unknown): void {
+    // Force refreshing data if there was no update for the last 10 minutes. The data might contain expiration data
+    // and without it the onValue would have been only invoked when the firebase data was changed.
+    clearTimeout(this.#onValueTimeout);
+    this.#onValueTimeout = setTimeout(() => this.#onValue(data), FORCE_REFRESH_TIMEOUT_MS);
+      
     let result: RefreshResultItem[] | Error;
     try {
       result = this._onValue(data);
